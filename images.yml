@@ -1,0 +1,29 @@
+images:
+  - name: eclipse-temurin
+    tags:
+      - ${java_version}-jre-jammy
+  - name: spark-base
+    dependsOn: eclipse-temurin
+    tags:
+      - spark-${spark_version}-scala-${scala_version}-java-${java_version}
+      - spark-${spark_version}-scala-${scala_version}-java-${java_version}-$(date '+%Y-%m-%d')
+  - name: spark
+    dependsOn: spark-base
+    tags:
+      - spark-${spark_version}-scala-${scala_version}-java-${java_version}
+      - spark-${spark_version}-scala-${scala_version}-java-${java_version}-$(date '+%Y-%m-%d')
+  - name: spark-py
+    dependsOn: spark
+    tags:
+      - spark-${spark_version}-python-${python_version}-scala-${scala_version}-java-${java_version}
+      - spark-${spark_version}-python-${python_version}-scala-${scala_version}-java-${java_version}-$(date '+%Y-%m-%d')
+  - name: spark-r
+    dependsOn: spark
+    tags:
+      - spark-${spark_version}-r-${r_version}-scala-${scala_version}-java-${java_version}
+      - spark-${spark_version}-r-${r_version}-scala-${scala_version}-java-${java_version}-$(date '+%Y-%m-%d')
+  - name: spark-python-r
+    dependsOn: spark-py
+    tags:
+      - spark-${spark_version}-python-${python_version}-r-${r_version}-scala-${scala_version}-java-${java_version}
+      - spark-${spark_version}-python-${python_version}-r-${r_version}-scala-${scala_version}-java-${java_version}-$(date '+%Y-%m-%d')

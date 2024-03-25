@@ -1,0 +1,67 @@
+name: spark build multiple images template
+
+on:
+  workflow_call:
+    inputs:
+      spark_version:
+        description: Spark version
+        required: true
+        type: string
+      scala_version:
+        description: Scala version
+        required: true
+        type: string
+      java_version:
+        description: Java version
+        required: true
+        type: string
+      hadoop_version:
+        description: Hadoop version
+        required: true
+        type: string
+      python_version:
+        description: Python version
+        required: true
+        type: string
+      registry:
+        description: The container registry 
+        required: false
+        type: string
+      push_to_registry:
+        description: Wheter to push to the registry
+        required: false
+        type: string
+        default: "false"
+      runs-on:
+        description: GitHub Actions Runner image
+        required: false
+        type: string
+        default: "ubuntu-latest"
+        
+    secrets:
+      registry_username:
+        required: false
+      registry_token:
+        required: false
+    
+jobs:
+    
+  spark-base:
+    uses: ./.github/workflows/build-image-template.yml
+    with:
+      image: spark-base
+      python_version: ${{ inputs.python_version }}
+      spark_version: ${{ inputs.spark_version }}
+      java_version: ${{ inputs.java_version }}
+      scala_version: ${{ inputs.scala_version }}
+      hadoop_version: ${{ inputs.hadoop_version }}
+      push_to_registry: ${{ inputs.push_to_registry }}
+      runs-on: ${{ inputs.runs-on }}
+      registry: ${{ inputs.registry }}
+    secrets:
+      registry_username: ${{ secrets.registry_username }}
+      registry_token: ${{ secrets.registry_token }}
+
+
+
+

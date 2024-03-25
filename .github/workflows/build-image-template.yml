@@ -1,0 +1,165 @@
+
+name: Spark build single image template
+
+on:
+  workflow_call:
+    inputs:
+      image:
+        description: The spark image name (ex. spark-base, spark, spark-py, spark-r, etc)
+        required: true
+        type: string
+      spark_version:
+        description: Spark version
+        required: true
+        type: string
+      scala_version:
+        description: Scala version
+        required: true
+        type: string
+      java_version:
+        description: Java version
+        required: true
+        type: string
+      hadoop_version:
+        description: Hadoop version
+        required: true
+        type: string
+      python_version:
+        description: Python version
+        required: true
+        type: string
+      push_to_registry:
+        description: Wheter to push to the registry
+        required: false
+        type: string
+        default: "false"
+      registry:
+        description: The container registry 
+        required: false
+        type: string
+      runs-on:
+        description: GitHub Actions Runner image
+        required: true
+        type: string
+        
+    secrets:
+      registry_username:
+        required: false
+      registry_token:
+        required: false
+
+jobs:
+  generate-image-tags:
+    runs-on: ${{ inputs.runs-on }}
+    outputs:
+      ci_tag: ${{ steps.image-tags.outputs.ci_tag }}
+      publish_tags: ${{ steps.image-tags.outputs.publish_tags }}
+    steps:
+      - name: Checkout Repo ⚡️
+        uses: actions/checkout@v4
+      - name: Generate image tags 📦
+        id: image-tags
+        uses: ./.github/actions/spark-image-tag
+        with:
+          image: ${{ inputs.image }}
+          spark_version: ${{ inputs.spark_version}}
+          scala_version: ${{ inputs.scala_version }}
+          java_version: ${{ inputs.java_version }}
+          python_version: ${{ inputs.python_version}}
+          publish_repo: ${{ inputs.registry }}/${{ env.REPO_OWNER }}
+        
+  build-test-push:
+    name: ${{ needs.generate-image-tags.outputs.ci_tag }}
+    runs-on: ${{ inputs.runs-on }}
+    needs: [generate-image-tags]
+    services:
+      registry:
+        image: registry:2
+        ports:
+          # Nektos/Act - Mac Control Center 5000 port conflict
+          - 5003:5000
+    steps:
+      - name: Checkout Repo ⚡️
+        uses: actions/checkout@v4
+
+      - name: Free up disk space 📦
+        uses: ./.github/actions/free-disk-space
+
+      - name: Set up QEMU and Docker Buildx 📦
+        uses: ./.github/actions/setup-buildx
+
+      - name: Set up local registry 📦
+        run:  |
+            echo "REPO_OWNER=${GITHUB_REPOSITORY_OWNER@L}" >> $GITHUB_ENV
+            echo "CI_REPO=localhost:5003/${GITHUB_REPOSITORY_OWNER@L}" >> $GITHUB_ENV
+        shell: bash
+          
+      - name: Build and push to local registry
+        if: inputs.push_to_registry == 'false'
+        uses: docker/build-push-action@v3
+        with:
+          context: ${{ inputs.image }}
+          platforms: linux/amd64,linux/arm64
+          push: true
+          build-args: |
+            SPARK_VERSION=${{ inputs.spark_version}}
+            SCALA_VERSION=${{ inputs.scala_version }}
+            JAVA_VERSION=${{ inputs.java_version }}
+            HADOOP_VERSION=${{ inputs.hadoop_version }}
+          tags: |
+            ${{ env.CI_REPO }}/${{ inputs.image }}:${{ needs.generate-image-tags.outputs.ci_tag }}
+
+      # https://github.com/nektos/act/issues/678
+      - name: Checkout Spark tag v${{ inputs.spark_version }} ⚡️
+        if: inputs.push_to_registry == 'false'
+        id: git-checkout-tag
+        run: |
+          CHECKOUT_TAG_DIR="$(mktemp -d)/spark"
+          git clone https://github.com/apache/spark.git ${CHECKOUT_TAG_DIR}
+          cd ${CHECKOUT_TAG_DIR}
+          git checkout v${{ inputs.spark_version }}
+          echo "checkout_directory=${CHECKOUT_TAG_DIR}" >> $GITHUB_OUTPUT
+        shell: bash
+
+      - name: Prepare Integration Tests env 📦
+        if: inputs.push_to_registry == 'false'
+        uses: ./.github/actions/spark-tests-prepare
+        with:
+          spark_version: ${{ inputs.spark_version}}
+          scala_version: ${{ inputs.scala_version }}
+          java_version: ${{ inputs.java_version }}
+
+      - name: Set up Kind k8s cluster 📦
+        if: inputs.push_to_registry == 'false'
+        uses: ./.github/actions/setup-kind
+
+      - name: Run Integration Tests ✅
+        if: inputs.push_to_registry == 'false'
+        uses: ./.github/actions/spark-tests-run
+        with:
+          ci-repo: ${{ env.CI_REPO }}
+          image: ${{ inputs.image }}
+          image-tag: ${{ needs.generate-image-tags.outputs.ci_tag }}
+          git_checkout_tag_dir: ${{ steps.git-checkout-tag.outputs.checkout_directory }}
+
+      - name: Login to Registry
+        if: inputs.push_to_registry == 'true'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ inputs.registry }}
+          username: ${{ secrets.registry_username }}
+          password: ${{ secrets.registry_token }}
+
+      - name: Build and push to registry
+        if: inputs.push_to_registry == 'true'
+        uses: docker/build-push-action@v3
+        with:
+          context: images/spark/spark-base
+          platforms: linux/amd64,linux/arm64
+          push: true
+          build-args: |
+            SPARK_VERSION=${{ inputs.spark_version}}
+            SCALA_VERSION=${{ inputs.scala_version }}
+            JAVA_VERSION=${{ inputs.java_version }}
+            HADOOP_VERSION=${{ inputs.hadoop_version }}
+          tags: ${{ needs.generate-image-tags.outputs.publish_tags }}

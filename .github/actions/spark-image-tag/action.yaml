@@ -1,0 +1,71 @@
+name: Generate spark image tags
+description: Generate spark image tags
+
+inputs:
+  image:
+    description: Image name
+    required: true
+  spark_version:
+    description: Spark version
+    required: true
+  scala_version:
+    description: Scala version
+    required: true
+  java_version:
+    description: Java version
+    required: true
+  python_version:
+    description: Python version
+    required: true
+  publish_repo:
+    description: The registry repo where to publish
+    required: false
+    default: ""
+
+outputs:
+  parent_image:
+    description: "Image tags"
+    value: ${{ steps.tags.outputs.parent_image }}
+  ci_tag:
+    description: "CI image tags (ex.: spark-3.3.4....)"
+    value: ${{ steps.tags.outputs.ci_tag }}
+  publish_tags:
+    description: "Image tags to push into registry (ex.: quay.io/spark-r:spark-3.3.4...)"
+    value: ${{ steps.tags.outputs.publish_tags }}
+
+runs:
+  using: composite
+  steps:
+    - name: Install yq
+      run: |
+         sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/download/v4.42.1/yq_linux_amd64
+         sudo chmod a+x /usr/local/bin/yq
+      shell: bash
+
+    - name: Generate spark image tags 📦
+      id: tags
+      run: |
+        ### Inputs
+        spark_version=${{ inputs.spark_version }}
+        scala_version=${{ inputs.scala_version }}
+        java_version=${{ inputs.java_version }}
+        python_version=${{ inputs.python_version }}
+        
+        ### Outputs - Parse: images.yml
+        PARENT_IMAGE_NAME=$(yq '(.images[] | select(.name == "${{ inputs.image }}").dependsOn)' images.yml)
+        PARENT_IMAGE_NAME=$(eval echo ${PARENT_IMAGE_NAME})
+        
+        PARENT_IMAGE_TAG=$(yq -oc "(.images[] | select(.name == \"${PARENT_IMAGE_NAME}\").tags[0])" images.yml)
+        PARENT_IMAGE_TAG=$(eval echo ${PARENT_IMAGE_TAG})
+        
+        CI_TAG=$(yq -oc '(.images[] | select(.name == "${{ inputs.image }}").tags[0])' images.yml)
+        CI_TAG=$(eval echo ${CI_TAG})
+
+        PUBLISH_TAGS=$(yq -oc  '[.images[] | select(.name == "${{ inputs.image }}").tags | .[] |"${{ inputs.publish_repo }}/${{ inputs.image }}:" + .]' images.yml)
+        PUBLISH_TAGS=$(eval echo ${PUBLISH_TAGS})
+
+        echo "parent_image=${PARENT_IMAGE_NAME}:${PARENT_IMAGE_TAG}" >> $GITHUB_OUTPUT
+        echo "ci_tag=${CI_TAG}" >> $GITHUB_OUTPUT
+        echo "publish_tags=${PUBLISH_TAGS}" >> $GITHUB_OUTPUT
+        
+      shell: bash

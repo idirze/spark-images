@@ -1,0 +1,40 @@
+name: Run integration tests
+description: Run integration tests
+
+inputs:
+  ci-repo:
+    description: The CI registry repo URL
+    required: true
+  image:
+    description: Spark image name to test (ex. spark)
+    required: true
+  image-tag:
+    description: Spark image tag to test (ex. latest)
+    required: true
+  git_checkout_tag_dir:
+    description: Git checkout tag directory
+    required: true
+
+runs:
+  using: composite
+  steps:
+    # https://github.com/apache/spark/tree/master/resource-managers/kubernetes/integration-tests
+    # https://github.com/apache/spark-docker/blob/master/.github/workflows/main.yml
+    - name: Run integration tests
+      run: |
+          kubectl create clusterrolebinding serviceaccounts-cluster-admin --clusterrole=cluster-admin --group=system:serviceaccounts || true
+          docker pull ${{ inputs.ci-repo}}/${{ inputs.image }}:${{ inputs.image-tag }} 
+          kind load docker-image ${{ inputs.ci-repo}}/${{ inputs.image }}:${{ inputs.image-tag }} --name kind-ci-${{ github.job }}
+          build/sbt -Pkubernetes -Pkubernetes-integration-tests \
+                    -Dspark.kubernetes.test.driverRequestCores=0.5 -Dspark.kubernetes.test.executorRequestCores=0.2 \
+                    -Dspark.kubernetes.test.deployMode=cloud  \
+                    -Dspark.kubernetes.test.imageRepo=${{ inputs.ci-repo}} -Dspark.kubernetes.test.imageTag=${{ inputs.image-tag }} \
+                    -Dspark.kubernetes.test.jvmImage=${{ inputs.image }} \
+                    -Dspark.kubernetes.test.pythonImage=${{ inputs.image }} \
+                    -Dspark.kubernetes.test.pythonImage=${{ inputs.image }} \
+                    -Dspark.kubernetes.test.rImage=${{ inputs.image }} \
+                    'kubernetes-integration-tests/testOnly -- -z "Run SparkPi"'
+
+      working-directory: ${{ inputs.git_checkout_tag_dir }}
+      shell: bash
+
