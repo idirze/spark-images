@@ -19,6 +19,10 @@ ARG HADOOP_VERSION=3.2
 ARG SCALA_VERSION=2.12
 ARG JAVA_VERSION=11
 
+ARG REGISTRY=quay.io
+ARG REPO=okdp
+ARG BASE_IMAGE=${REGISTRY}/${REPO}/spark:base-spark-${SPARK_VERSION}-scala-${SCALA_VERSION}-java-${JAVA_VERSION}
+
 FROM eclipse-temurin:${JAVA_VERSION}-jre-jammy AS okdp_addons
 ARG SPARK_VERSION=3.2.1
 ARG SCALA_VERSION=2.12
@@ -33,6 +37,7 @@ COPY okdp-addons.pom deps/pom.xml
 
 # The setup consumes less space compare to inheriting from the parent pom
 # Handles the transitive dependencies versions through the pom
+# Manage Java AWS SDK v1 (hadoop <3.4)/V2 (hadoop >=3.4)
 RUN mvn dependency:get -DgroupId=org.apache.spark -DartifactId=spark-parent_${SCALA_VERSION} -Dversion=${SPARK_VERSION} -Dpackaging=pom; \
     mvn dependency:copy -Dartifact=org.apache.spark:spark-parent_${SCALA_VERSION}:${SPARK_VERSION}:pom -Dproject.basedir=./ -DoutputDirectory=./; \
     HADOOP_VERSION=$(grep "<hadoop.version>" spark-parent_${SCALA_VERSION}-${SPARK_VERSION}.pom | sed -e 's/^ *<hadoop.version>\(.*\)<\/hadoop.version> *$/\1/'|head -1); \
@@ -43,7 +48,7 @@ RUN mvn dependency:get -DgroupId=org.apache.spark -DartifactId=spark-parent_${SC
         -Dhadoop.version=${HADOOP_VERSION} \
         -Paws
 
-FROM idirze/spark:base-spark-${SPARK_VERSION}-scala-${SCALA_VERSION}-java-${JAVA_VERSION}
+FROM $BASE_IMAGE
 
 ENV JMX_CONF_DIR     /etc/metrics/conf/
 

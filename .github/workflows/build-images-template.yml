@@ -62,6 +62,51 @@ jobs:
       registry_username: ${{ secrets.registry_username }}
       registry_token: ${{ secrets.registry_token }}
 
+  spark:
+    uses: ./.github/workflows/build-image-template.yml
+    with:
+      image: spark
+      python_version: ${{ inputs.python_version }}
+      spark_version: ${{ inputs.spark_version }}
+      java_version: ${{ inputs.java_version }}
+      scala_version: ${{ inputs.scala_version }}
+      hadoop_version: ${{ inputs.hadoop_version }}
+      push_to_registry: ${{ inputs.push_to_registry }}
+      runs-on: ${{ inputs.runs-on }}
+      registry: ${{ inputs.registry }}
+    secrets:
+      registry_username: ${{ secrets.registry_username }}
+      registry_token: ${{ secrets.registry_token }}
 
+  spark-py:
+    uses: ./.github/workflows/build-image-template.yml
+    with:
+      image: spark-py
+      python_version: ${{ inputs.python_version }}
+      spark_version: ${{ inputs.spark_version }}
+      java_version: ${{ inputs.java_version }}
+      scala_version: ${{ inputs.scala_version }}
+      hadoop_version: ${{ inputs.hadoop_version }}
+      push_to_registry: ${{ inputs.push_to_registry }}
+      runs-on: ${{ inputs.runs-on }}
+      registry: ${{ inputs.registry }}
+    secrets:
+      registry_username: ${{ secrets.registry_username }}
+      registry_token: ${{ secrets.registry_token }}
 
+  spark-r:
+    uses: ./.github/workflows/build-image-template.yml
+    with:
+      image: spark-r
+      python_version: ${{ inputs.python_version }}
+      spark_version: ${{ inputs.spark_version }}
+      java_version: ${{ inputs.java_version }}
+      scala_version: ${{ inputs.scala_version }}
+      hadoop_version: ${{ inputs.hadoop_version }}
+      push_to_registry: ${{ inputs.push_to_registry }}
+      runs-on: ${{ inputs.runs-on }}
+      registry: ${{ inputs.registry }}
+    secrets:
+      registry_username: ${{ secrets.registry_username }}
+      registry_token: ${{ secrets.registry_token }}
 

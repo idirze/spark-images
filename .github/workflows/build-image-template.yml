@@ -49,29 +49,10 @@ on:
         required: false
 
 jobs:
-  generate-image-tags:
-    runs-on: ${{ inputs.runs-on }}
-    outputs:
-      ci_tag: ${{ steps.image-tags.outputs.ci_tag }}
-      publish_tags: ${{ steps.image-tags.outputs.publish_tags }}
-    steps:
-      - name: Checkout Repo ⚡️
-        uses: actions/checkout@v4
-      - name: Generate image tags 📦
-        id: image-tags
-        uses: ./.github/actions/spark-image-tag
-        with:
-          image: ${{ inputs.image }}
-          spark_version: ${{ inputs.spark_version}}
-          scala_version: ${{ inputs.scala_version }}
-          java_version: ${{ inputs.java_version }}
-          python_version: ${{ inputs.python_version}}
-          publish_repo: ${{ inputs.registry }}/${{ env.REPO_OWNER }}
-        
+  
   build-test-push:
-    name: ${{ needs.generate-image-tags.outputs.ci_tag }}
+    name: ${{ inputs.image }} (spark-${{ inputs.spark_version }}, scala-${{ inputs.scala_version }}, java-${{ inputs.java_version }}, python-${{ inputs.python_version }})
     runs-on: ${{ inputs.runs-on }}
-    needs: [generate-image-tags]
     services:
       registry:
         image: registry:2
@@ -89,13 +70,25 @@ jobs:
         uses: ./.github/actions/setup-buildx
 
       - name: Set up local registry 📦
+        id: local-registry
         run:  |
-            echo "REPO_OWNER=${GITHUB_REPOSITORY_OWNER@L}" >> $GITHUB_ENV
-            echo "CI_REPO=localhost:5003/${GITHUB_REPOSITORY_OWNER@L}" >> $GITHUB_ENV
+            echo "repo_owner=${GITHUB_REPOSITORY_OWNER@L}" >> $GITHUB_OUTPUT
+            echo "ci_repo=localhost:5003/${GITHUB_REPOSITORY_OWNER@L}" >> $GITHUB_OUTPUT
         shell: bash
-          
-      - name: Build and push to local registry
-        if: inputs.push_to_registry == 'false'
+
+      - name: Generate image tags 📦
+        id: image-tags
+        uses: ./.github/actions/spark-image-tag
+        with:
+          image: ${{ inputs.image }}
+          spark_version: ${{ inputs.spark_version}}
+          scala_version: ${{ inputs.scala_version }}
+          java_version: ${{ inputs.java_version }}
+          python_version: ${{ inputs.python_version}}
+          publish_repo: ${{ inputs.registry }}/${{ steps.local-registry.outputs.repo_owner }}
+
+      - name: Build and push to local registry (${{ inputs.spark_version}} > 3.0)
+        if: inputs.push_to_registry == 'false' && !startsWith( ${{ inputs.spark_version }}, "2.")
         uses: docker/build-push-action@v3
         with:
           context: ${{ inputs.image }}
@@ -106,12 +99,13 @@ jobs:
             SCALA_VERSION=${{ inputs.scala_version }}
             JAVA_VERSION=${{ inputs.java_version }}
             HADOOP_VERSION=${{ inputs.hadoop_version }}
+            BASE_IMAGE=${{ steps.image-tags.outputs.parent_image }}
           tags: |
-            ${{ env.CI_REPO }}/${{ inputs.image }}:${{ needs.generate-image-tags.outputs.ci_tag }}
+            ${{ steps.local-registry.outputs.ci_repo }}/${{ inputs.image }}:${{ steps.image-tags.outputs.ci_tag }}
 
       # https://github.com/nektos/act/issues/678
-      - name: Checkout Spark tag v${{ inputs.spark_version }} ⚡️
-        if: inputs.push_to_registry == 'false'
+      - name: Checkout Spark tag v${{ inputs.spark_version }} (${{ inputs.spark_version}} > 3.0) ⚡️
+        if: inputs.push_to_registry == 'false' && !startsWith( ${{ inputs.spark_version }}, "2.")
         id: git-checkout-tag
         run: |
           CHECKOUT_TAG_DIR="$(mktemp -d)/spark"
@@ -121,25 +115,25 @@ jobs:
           echo "checkout_directory=${CHECKOUT_TAG_DIR}" >> $GITHUB_OUTPUT
         shell: bash
 
-      - name: Prepare Integration Tests env 📦
-        if: inputs.push_to_registry == 'false'
+      - name: Prepare Integration Tests env (${{ inputs.spark_version}} > 3.0) 📦
+        if: inputs.push_to_registry == 'false' && !startsWith( ${{ inputs.spark_version }}, "2.")
         uses: ./.github/actions/spark-tests-prepare
         with:
           spark_version: ${{ inputs.spark_version}}
           scala_version: ${{ inputs.scala_version }}
           java_version: ${{ inputs.java_version }}
 
-      - name: Set up Kind k8s cluster 📦
-        if: inputs.push_to_registry == 'false'
+      - name: Set up Kind k8s cluster (${{ inputs.spark_version}} > 3.0) 📦
+        if: inputs.push_to_registry == 'false' && !startsWith( ${{ inputs.spark_version }}, "2.")
         uses: ./.github/actions/setup-kind
 
-      - name: Run Integration Tests ✅
-        if: inputs.push_to_registry == 'false'
+      - name: Run Integration Tests (${{ inputs.spark_version}} > 3.0) ✅
+        if: inputs.push_to_registry == 'false' && !startsWith( ${{ inputs.spark_version }}, "2.")
         uses: ./.github/actions/spark-tests-run
         with:
-          ci-repo: ${{ env.CI_REPO }}
+          ci-repo: ${{ steps.local-registry.outputs.ci_repo }}
           image: ${{ inputs.image }}
-          image-tag: ${{ needs.generate-image-tags.outputs.ci_tag }}
+          image-tag: ${{ steps.image-tags.outputs.ci_tag }}
           git_checkout_tag_dir: ${{ steps.git-checkout-tag.outputs.checkout_directory }}
 
       - name: Login to Registry
@@ -162,4 +156,5 @@ jobs:
             SCALA_VERSION=${{ inputs.scala_version }}
             JAVA_VERSION=${{ inputs.java_version }}
             HADOOP_VERSION=${{ inputs.hadoop_version }}
-          tags: ${{ needs.generate-image-tags.outputs.publish_tags }}
+            BASE_IMAGE=${{ steps.image-tags.outputs.parent_image }}
+          tags: ${{ steps.image-tags.outputs.publish_tags }}

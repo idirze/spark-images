@@ -34,7 +34,7 @@ concurrency:
 jobs:
     
   spark-ci:
-    name: spark-ci (spark-${{ matrix.spark_version }}, python-${{ matrix.python_version }}, scala-${{ matrix.scala_version }}, java-${{ matrix.java_version }})
+    name: spark-ci (spark-${{ matrix.spark_version }})
     strategy:
       matrix: 
         python_version: [3.11]

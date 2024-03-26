@@ -15,7 +15,8 @@
 # limitations under the License.
 #
 ARG JAVA_VERSION=11
-FROM eclipse-temurin:${JAVA_VERSION}-jre-jammy 
+ARG BASE_IMAGE=eclipse-temurin:${JAVA_VERSION}-jre-jammy 
+FROM $BASE_IMAGE
 
 ARG spark_uid=185
 

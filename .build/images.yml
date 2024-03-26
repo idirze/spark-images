@@ -1,9 +1,9 @@
 images:
-  - name: eclipse-temurin
+  - name: docker.io/eclipse-temurin
     tags:
       - ${java_version}-jre-jammy
   - name: spark-base
-    dependsOn: eclipse-temurin
+    dependsOn: docker.io/eclipse-temurin
     tags:
       - spark-${spark_version}-scala-${scala_version}-java-${java_version}
       - spark-${spark_version}-scala-${scala_version}-java-${java_version}-$(date '+%Y-%m-%d')
@@ -22,7 +22,7 @@ images:
     tags:
       - spark-${spark_version}-r-${r_version}-scala-${scala_version}-java-${java_version}
       - spark-${spark_version}-r-${r_version}-scala-${scala_version}-java-${java_version}-$(date '+%Y-%m-%d')
-  - name: spark-python-r
+  - name: spark-py-r
     dependsOn: spark-py
     tags:
       - spark-${spark_version}-python-${python_version}-r-${r_version}-scala-${scala_version}-java-${java_version}
