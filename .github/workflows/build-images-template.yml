@@ -1,3 +1,19 @@
+#
+# Copyright 2024 tosit.io
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
 name: spark build multiple images template
 
 on:
@@ -37,13 +53,7 @@ on:
         required: false
         type: string
         default: "ubuntu-latest"
-        
-    secrets:
-      registry_username:
-        required: false
-      registry_token:
-        required: false
-    
+            
 jobs:
     
   spark-base:
@@ -55,15 +65,14 @@ jobs:
       java_version: ${{ inputs.java_version }}
       scala_version: ${{ inputs.scala_version }}
       hadoop_version: ${{ inputs.hadoop_version }}
+      registry: ${{ inputs.registry }}
       push_to_registry: ${{ inputs.push_to_registry }}
       runs-on: ${{ inputs.runs-on }}
-      registry: ${{ inputs.registry }}
-    secrets:
-      registry_username: ${{ secrets.registry_username }}
-      registry_token: ${{ secrets.registry_token }}
+    secrets: inherit
 
   spark:
     uses: ./.github/workflows/build-image-template.yml
+    needs: [spark-base]
     with:
       image: spark
       python_version: ${{ inputs.python_version }}
@@ -71,15 +80,14 @@ jobs:
       java_version: ${{ inputs.java_version }}
       scala_version: ${{ inputs.scala_version }}
       hadoop_version: ${{ inputs.hadoop_version }}
+      registry: ${{ inputs.registry }}
       push_to_registry: ${{ inputs.push_to_registry }}
       runs-on: ${{ inputs.runs-on }}
-      registry: ${{ inputs.registry }}
-    secrets:
-      registry_username: ${{ secrets.registry_username }}
-      registry_token: ${{ secrets.registry_token }}
+    secrets: inherit
 
   spark-py:
     uses: ./.github/workflows/build-image-template.yml
+    needs: [spark]
     with:
       image: spark-py
       python_version: ${{ inputs.python_version }}
@@ -87,15 +95,14 @@ jobs:
       java_version: ${{ inputs.java_version }}
       scala_version: ${{ inputs.scala_version }}
       hadoop_version: ${{ inputs.hadoop_version }}
+      registry: ${{ inputs.registry }}
       push_to_registry: ${{ inputs.push_to_registry }}
       runs-on: ${{ inputs.runs-on }}
-      registry: ${{ inputs.registry }}
-    secrets:
-      registry_username: ${{ secrets.registry_username }}
-      registry_token: ${{ secrets.registry_token }}
+    secrets: inherit
 
   spark-r:
     uses: ./.github/workflows/build-image-template.yml
+    needs: [spark]
     with:
       image: spark-r
       python_version: ${{ inputs.python_version }}
@@ -103,10 +110,7 @@ jobs:
       java_version: ${{ inputs.java_version }}
       scala_version: ${{ inputs.scala_version }}
       hadoop_version: ${{ inputs.hadoop_version }}
+      registry: ${{ inputs.registry }}
       push_to_registry: ${{ inputs.push_to_registry }}
       runs-on: ${{ inputs.runs-on }}
-      registry: ${{ inputs.registry }}
-    secrets:
-      registry_username: ${{ secrets.registry_username }}
-      registry_token: ${{ secrets.registry_token }}
-
+    secrets: inherit

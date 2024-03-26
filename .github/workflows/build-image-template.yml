@@ -1,4 +1,20 @@
 
+#
+# Copyright 2024 tosit.io
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
 name: Spark build single image template
 
 on:
@@ -37,28 +53,21 @@ on:
         description: The container registry 
         required: false
         type: string
+      ci_registry:
+        description: "The registry used to push ci images"
+        required: false
+        type: string
+        default: "ghcr.io"
       runs-on:
         description: GitHub Actions Runner image
         required: true
         type: string
-        
-    secrets:
-      registry_username:
-        required: false
-      registry_token:
-        required: false
 
 jobs:
   
   build-test-push:
-    name: ${{ inputs.image }} (spark-${{ inputs.spark_version }}, scala-${{ inputs.scala_version }}, java-${{ inputs.java_version }}, python-${{ inputs.python_version }})
+    name: ${{ inputs.image }} (scala-${{ inputs.scala_version }}, java-${{ inputs.java_version }}, python-${{ inputs.python_version }})
     runs-on: ${{ inputs.runs-on }}
-    services:
-      registry:
-        image: registry:2
-        ports:
-          # Nektos/Act - Mac Control Center 5000 port conflict
-          - 5003:5000
     steps:
       - name: Checkout Repo ⚡️
         uses: actions/checkout@v4
@@ -69,11 +78,12 @@ jobs:
       - name: Set up QEMU and Docker Buildx 📦
         uses: ./.github/actions/setup-buildx
 
-      - name: Set up local registry 📦
-        id: local-registry
+      - name: Set up CI and Publish registries 📦
+        id: registry-repos
         run:  |
             echo "repo_owner=${GITHUB_REPOSITORY_OWNER@L}" >> $GITHUB_OUTPUT
-            echo "ci_repo=localhost:5003/${GITHUB_REPOSITORY_OWNER@L}" >> $GITHUB_OUTPUT
+            echo "ci_repo=${{ inputs.ci_registry }}/${GITHUB_REPOSITORY_OWNER@L}" >> $GITHUB_OUTPUT
+            echo "publish_repo=${{ inputs.registry }}/${GITHUB_REPOSITORY_OWNER@L}" >> $GITHUB_OUTPUT
         shell: bash
 
       - name: Generate image tags 📦
@@ -85,11 +95,21 @@ jobs:
           scala_version: ${{ inputs.scala_version }}
           java_version: ${{ inputs.java_version }}
           python_version: ${{ inputs.python_version}}
-          publish_repo: ${{ inputs.registry }}/${{ steps.local-registry.outputs.repo_owner }}
+          ci_repo: ${{ steps.registry-repos.outputs.ci_repo }}
+          publish_repo: ${{ steps.registry-repos.outputs.publish_repo }}
+          push_to_registry: ${{ inputs.push_to_registry }}
 
-      - name: Build and push to local registry (${{ inputs.spark_version}} > 3.0)
-        if: inputs.push_to_registry == 'false' && !startsWith( ${{ inputs.spark_version }}, "2.")
-        uses: docker/build-push-action@v3
+      - name: Login to the CI registry (${{ github.actor }})
+        if: inputs.push_to_registry == 'false' && !startsWith(inputs.spark_version, '2.')
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ inputs.ci_registry }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push to ci registry
+        if: inputs.push_to_registry == 'false' && !startsWith(inputs.spark_version, '2.')
+        uses: docker/build-push-action@v5
         with:
           context: ${{ inputs.image }}
           platforms: linux/amd64,linux/arm64
@@ -98,63 +118,65 @@ jobs:
             SPARK_VERSION=${{ inputs.spark_version}}
             SCALA_VERSION=${{ inputs.scala_version }}
             JAVA_VERSION=${{ inputs.java_version }}
+            PYTHON_VERSION=${{ inputs.python_version }}
             HADOOP_VERSION=${{ inputs.hadoop_version }}
             BASE_IMAGE=${{ steps.image-tags.outputs.parent_image }}
           tags: |
-            ${{ steps.local-registry.outputs.ci_repo }}/${{ inputs.image }}:${{ steps.image-tags.outputs.ci_tag }}
+            ${{ steps.registry-repos.outputs.ci_repo }}/${{ inputs.image }}:${{ steps.image-tags.outputs.ci_tag }}
 
       # https://github.com/nektos/act/issues/678
-      - name: Checkout Spark tag v${{ inputs.spark_version }} (${{ inputs.spark_version}} > 3.0) ⚡️
-        if: inputs.push_to_registry == 'false' && !startsWith( ${{ inputs.spark_version }}, "2.")
+      - name: Checkout integration tests tag v${{ inputs.spark_version }} (${{ inputs.spark_version}} > 3.0) ⚡️
+        if: inputs.push_to_registry == 'false' && !startsWith(inputs.spark_version, '2.')
         id: git-checkout-tag
         run: |
-          CHECKOUT_TAG_DIR="$(mktemp -d)/spark"
-          git clone https://github.com/apache/spark.git ${CHECKOUT_TAG_DIR}
-          cd ${CHECKOUT_TAG_DIR}
-          git checkout v${{ inputs.spark_version }}
-          echo "checkout_directory=${CHECKOUT_TAG_DIR}" >> $GITHUB_OUTPUT
+            CHECKOUT_TAG_DIR="$(mktemp -d)/spark"
+            git clone https://github.com/apache/spark.git ${CHECKOUT_TAG_DIR}
+            cd ${CHECKOUT_TAG_DIR}
+            git checkout v${{ inputs.spark_version }}
+            echo "checkout_directory=${CHECKOUT_TAG_DIR}" >> $GITHUB_OUTPUT
         shell: bash
 
-      - name: Prepare Integration Tests env (${{ inputs.spark_version}} > 3.0) 📦
-        if: inputs.push_to_registry == 'false' && !startsWith( ${{ inputs.spark_version }}, "2.")
+      - name: Prepare integration tests env (${{ inputs.spark_version}} > 3.0) 📦
+        if: inputs.push_to_registry == 'false' && !startsWith(inputs.spark_version, '2.')
         uses: ./.github/actions/spark-tests-prepare
         with:
           spark_version: ${{ inputs.spark_version}}
           scala_version: ${{ inputs.scala_version }}
           java_version: ${{ inputs.java_version }}
 
-      - name: Set up Kind k8s cluster (${{ inputs.spark_version}} > 3.0) 📦
-        if: inputs.push_to_registry == 'false' && !startsWith( ${{ inputs.spark_version }}, "2.")
+      - name: Set up Kind integration tests cluster (${{ inputs.spark_version}} > 3.0) 📦
+        if: inputs.push_to_registry == 'false' && !startsWith(inputs.spark_version, '2.')
         uses: ./.github/actions/setup-kind
 
-      - name: Run Integration Tests (${{ inputs.spark_version}} > 3.0) ✅
-        if: inputs.push_to_registry == 'false' && !startsWith( ${{ inputs.spark_version }}, "2.")
+      - name: Run integration tests (${{ inputs.spark_version}} > 3.0) ✅
+        if: inputs.push_to_registry == 'false' && !startsWith(inputs.spark_version, '2.')
         uses: ./.github/actions/spark-tests-run
         with:
-          ci-repo: ${{ steps.local-registry.outputs.ci_repo }}
+          ci-repo: ${{ steps.registry-repos.outputs.ci_repo }}
           image: ${{ inputs.image }}
           image-tag: ${{ steps.image-tags.outputs.ci_tag }}
           git_checkout_tag_dir: ${{ steps.git-checkout-tag.outputs.checkout_directory }}
 
-      - name: Login to Registry
+      - name: Login to publish registry
         if: inputs.push_to_registry == 'true'
         uses: docker/login-action@v3
         with:
           registry: ${{ inputs.registry }}
-          username: ${{ secrets.registry_username }}
-          password: ${{ secrets.registry_token }}
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_ROBOT_TOKEN }}
 
-      - name: Build and push to registry
+      - name: Build and push to publish registry
         if: inputs.push_to_registry == 'true'
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v5
         with:
-          context: images/spark/spark-base
+          context: ${{ inputs.image }}
           platforms: linux/amd64,linux/arm64
           push: true
           build-args: |
             SPARK_VERSION=${{ inputs.spark_version}}
             SCALA_VERSION=${{ inputs.scala_version }}
             JAVA_VERSION=${{ inputs.java_version }}
+            PYTHON_VERSION=${{ inputs.python_version }}
             HADOOP_VERSION=${{ inputs.hadoop_version }}
             BASE_IMAGE=${{ steps.image-tags.outputs.parent_image }}
           tags: ${{ steps.image-tags.outputs.publish_tags }}

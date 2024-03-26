@@ -29,10 +29,12 @@ ARG PYTHON_VERSION   3.11
 
 USER root
 
+COPY requirements.txt .
+
 RUN set -ex; \
     apt-get update; \
     apt-get install -y --no-install-recommends python${PYTHON_VERSION} python3-pip; \
     pip install -r requirements.txt; \
-    rm -rf /var/lib/apt/lists/*
+    rm -rf /var/lib/apt/lists/* requirements.txt
 
 USER spark

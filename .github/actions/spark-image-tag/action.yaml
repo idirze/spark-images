@@ -1,3 +1,19 @@
+#
+# Copyright 2024 tosit.io
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
 name: Generate spark image tags
 description: Generate spark image tags
 
@@ -17,10 +33,15 @@ inputs:
   python_version:
     description: Python version
     required: true
-  publish_repo:
-    description: The registry repo where to publish
+  ci_repo:
+    description: The CI registry repo
     required: false
-    default: ""
+  publish_repo:
+    description: The Publish registry repo
+    required: false
+  push_to_registry:
+    description: Whether to push or not to the Publish repo
+    required: true
 
 outputs:
   parent_image:
@@ -41,6 +62,9 @@ runs:
          sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/download/v4.42.1/yq_linux_amd64
          sudo chmod a+x /usr/local/bin/yq
       shell: bash
+      
+    - name: Expose git commit sha as env variable
+      uses: rlespinasse/git-commit-data-action@v1.5.0
 
     - name: Generate spark image tags 📦
       id: tags
@@ -50,6 +74,7 @@ runs:
         scala_version=${{ inputs.scala_version }}
         java_version=${{ inputs.java_version }}
         python_version=${{ inputs.python_version }}
+        git_commit_sha=${{ env.GIT_COMMIT_SHA }}
         
         ### Outputs - Parse: .build/images.yml
         PARENT_IMAGE_NAME=$(yq '(.images[] | select(.name == "${{ inputs.image }}").dependsOn)' .build/images.yml)
@@ -65,8 +90,15 @@ runs:
         PUBLISH_TAGS=$(yq -oc  '[.images[] | select(.name == "${{ inputs.image }}").tags | .[] |"${{ inputs.publish_repo }}/${{ inputs.image }}:" + .]' .build/images.yml)
         PUBLISH_TAGS=$(eval echo ${PUBLISH_TAGS})
 
-        if [[ "${PARENT_IMAGE_NAME}" != *"/"* ]]; then
-           PARENT_IMAGE_NAME="${{ inputs.publish_repo }}/${PARENT_IMAGE_NAME}"
+        # The image can inherit from a community image like docker.io/eclipse-temurin, ...
+        if [[ "${PARENT_IMAGE_NAME}" != *"/"* ]]
+        then
+           if [[ "${{ inputs.push_to_registry }}" == "true" ]]
+           then
+              PARENT_IMAGE_NAME="${{ inputs.publish_repo }}/${PARENT_IMAGE_NAME}"
+           else
+              PARENT_IMAGE_NAME="${{ inputs.ci_repo }}/${PARENT_IMAGE_NAME}"
+           fi
         fi
 
         # Logging

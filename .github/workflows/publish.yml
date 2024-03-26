@@ -1,3 +1,19 @@
+#
+# Copyright 2024 tosit.io
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
 name: publish 
 
 on:
@@ -31,14 +47,17 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  packages: write
+  
 jobs:
     
   spark-publish:
-    name: spark-publish (spark-${{ matrix.spark_version }}, python-${{ matrix.python_version }}, scala-${{ matrix.scala_version }}, java-${{ matrix.java_version }})
+    name: spark-publish (spark-${{ matrix.spark_version }})
     strategy:
       matrix: 
         python_version: [3.11]
-        spark_version: [3.3.3]
+        spark_version: [3.3.3, 3.3.4]
         java_version: [17]
         scala_version: [2.12]
         hadoop_version: [3]
@@ -49,10 +68,8 @@ jobs:
       java_version: ${{ matrix.java_version }}
       scala_version: ${{ matrix.scala_version }}
       hadoop_version: ${{ matrix.hadoop_version }}
-      push_to_registry: true
-      registry: ${{ vars.REGISTRY || 'ghcr.io' }}
-    secrets:
-      registry_username: ${{ secrets.REGISTRY_USERNAME }}
-      registry_token: ${{ secrets.REGISTRY_ROBOT_TOKEN }}
+      registry: ${{ vars.REGISTRY || 'quay.io' }}
+      push_to_registry: "true"
+    secrets: inherit
 
       

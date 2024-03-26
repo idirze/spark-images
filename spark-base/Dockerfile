@@ -51,8 +51,12 @@ RUN set -ex; \
 
 RUN set -ex;\
     export WORK_DIR="$(mktemp -d)"; \
-    curl --retry 3 --retry-all-errors -k ${SPARK_DIST_DOWNLOAD_URL}/spark-${SPARK_VERSION}/spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION}.tgz -o ${WORK_DIR}/spark.tgz; \
-    curl --retry 3 --retry-all-errors -k ${SPARK_DIST_DOWNLOAD_URL}/spark-${SPARK_VERSION}/spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION}.tgz.asc -o ${WORK_DIR}/spark.tgz.asc; \
+    DIST=spark-${SPARK_VERSION}/spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION}; \
+    if [ "${SCALA_VERSION}" = "2.13" ]; then \
+      DIST+=-scala${SCALA_VERSION}; \
+    fi; \
+    curl --retry 3 --retry-all-errors -k ${SPARK_DIST_DOWNLOAD_URL}/${DIST}.tgz -o ${WORK_DIR}/spark.tgz; \
+    curl --retry 3 --retry-all-errors -k ${SPARK_DIST_DOWNLOAD_URL}/${DIST}.tgz.asc -o ${WORK_DIR}/spark.tgz.asc; \
     curl --retry 3 --retry-all-errors -k https://downloads.apache.org/spark/KEYS -o ${WORK_DIR}/KEYS; \
     export GNUPGHOME="$(mktemp -d)"; \
     gpg --batch --import ${WORK_DIR}/KEYS; \
