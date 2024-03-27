@@ -178,7 +178,7 @@ jobs:
       - name: Checkout latest Github Release tag (${{ steps.git-release-tag.outputs.git_tag_name }}) ⚡️
         if: inputs.publish_to_registry == 'true' && steps.git-release-tag.outputs.git_tag_name != ''
         run: |
-          git checkout tags/v${{ steps.git-release-tag.outputs.git_tag_name }}
+          git checkout tags/${{ steps.git-release-tag.outputs.git_tag_name }}
           git branch -l
         shell: bash
 
