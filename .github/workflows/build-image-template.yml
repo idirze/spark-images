@@ -69,13 +69,24 @@ jobs:
     name: ${{ inputs.image }} (scala-${{ inputs.scala_version }}, java-${{ inputs.java_version }}, python-${{ inputs.python_version }})
     runs-on: ${{ inputs.runs-on }}
     steps:
-      ### Common steps between CI and Publish
-      - name: Checkout Repo ⚡️
+
+      ### The publish and periodic rebuilds are based on the latest stable release tag
+      - name: Get latest GitHub Release tag name 📥
+        if: inputs.publish_to_registry == 'true'
+        id: git-release-tag
+        uses: ./.github/actions/github-release-tag
+
+      - name: Checkout latest Github Release tag (${{ steps.git-release-tag.outputs.git_tag_name }}) ⚡️
+        if: inputs.publish_to_registry == 'true'
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
-          fetch-tags: true
+          ref: ${{ steps.git-release-tag.outputs.git_tag_name }}
+      
+      - name: Checkout Repo ⚡️
+        if: inputs.publish_to_registry == 'false'
+        uses: actions/checkout@v4
 
+      ### Common steps between CI and Publish
       - name: Free up disk space 📦
         uses: ./.github/actions/free-disk-space
 
@@ -164,26 +175,8 @@ jobs:
 
       ### Publish steps
       ### The publish and periodic rebuilds are based on the latest stable release tag
-      - name: Get latest GitHub Release tag name 📥
-        if: inputs.publish_to_registry == 'true'
-        id: git-release-tag
-        run: |
-          GIT_LATEST_REL_TAG=$(curl -s https://api.github.com/repos/${{ github.repository }}/releases/latest | jq -e  'select (.tag_name != null) | .tag_name | sub("v"; "")' || true)
-          echo "git_tag_name=v${GIT_LATEST_REL_TAG}" >> $GITHUB_OUTPUT
-          echo "git_release_version=${GIT_LATEST_REL_TAG}" >> $GITHUB_OUTPUT
-          echo "Latest release tag name: ${git_tag_name}"
-          echo "Latest release version: ${git_release_version}"
-        shell: bash
-
-      - name: Checkout latest Github Release tag (${{ steps.git-release-tag.outputs.git_tag_name }}) ⚡️
-        if: inputs.publish_to_registry == 'true' && steps.git-release-tag.outputs.git_tag_name != ''
-        run: |
-          git checkout tags/${{ steps.git-release-tag.outputs.git_tag_name }}
-          git branch -l
-        shell: bash
-
       - name: Login into publish registry 🔐
-        if: inputs.publish_to_registry == 'true' && steps.git-release-tag.outputs.git_tag_name != ''
+        if: inputs.publish_to_registry == 'true'
         uses: docker/login-action@v3
         with:
           registry: ${{ inputs.registry }}
@@ -191,7 +184,7 @@ jobs:
           password: ${{ secrets.REGISTRY_ROBOT_TOKEN }}
 
       - name: Build and push to publish registry 📤
-        if: inputs.publish_to_registry == 'true' && steps.git-release-tag.outputs.git_tag_name != ''
+        if: inputs.publish_to_registry == 'true'
         uses: docker/build-push-action@v5
         with:
           context: ${{ inputs.image }}
