@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-name: publish 
+name: scan 
 
 on:
   # pull_request:
@@ -52,8 +52,8 @@ permissions:
   
 jobs:
     
-  spark-publish:
-    name: spark-publish (spark-${{ matrix.spark_version }})
+  trivy:
+    name: scan-image (spark-${{ matrix.spark_version }})
     strategy:
       matrix: 
         python_version: [3.11]
@@ -69,7 +69,8 @@ jobs:
       scala_version: ${{ matrix.scala_version }}
       hadoop_version: ${{ matrix.hadoop_version }}
       registry: ${{ vars.REGISTRY || 'quay.io' }}
-      publish_to_registry: "true"
+      publish_to_registry: "false"
+      scan_only: "true"
     secrets: inherit
 
       

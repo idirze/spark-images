@@ -43,8 +43,13 @@ on:
         description: The container registry 
         required: false
         type: string
-      push_to_registry:
+      publish_to_registry:
         description: Wheter to push to the registry
+        required: false
+        type: string
+        default: "false"
+      scan_only:
+        description: "Whether to only run the scan"
         required: false
         type: string
         default: "false"
@@ -66,7 +71,7 @@ jobs:
       scala_version: ${{ inputs.scala_version }}
       hadoop_version: ${{ inputs.hadoop_version }}
       registry: ${{ inputs.registry }}
-      push_to_registry: ${{ inputs.push_to_registry }}
+      publish_to_registry: ${{ inputs.publish_to_registry }}
       runs-on: ${{ inputs.runs-on }}
     secrets: inherit
 
@@ -81,7 +86,7 @@ jobs:
       scala_version: ${{ inputs.scala_version }}
       hadoop_version: ${{ inputs.hadoop_version }}
       registry: ${{ inputs.registry }}
-      push_to_registry: ${{ inputs.push_to_registry }}
+      publish_to_registry: ${{ inputs.publish_to_registry }}
       runs-on: ${{ inputs.runs-on }}
     secrets: inherit
 
@@ -96,7 +101,7 @@ jobs:
       scala_version: ${{ inputs.scala_version }}
       hadoop_version: ${{ inputs.hadoop_version }}
       registry: ${{ inputs.registry }}
-      push_to_registry: ${{ inputs.push_to_registry }}
+      publish_to_registry: ${{ inputs.publish_to_registry }}
       runs-on: ${{ inputs.runs-on }}
     secrets: inherit
 
@@ -111,6 +116,6 @@ jobs:
       scala_version: ${{ inputs.scala_version }}
       hadoop_version: ${{ inputs.hadoop_version }}
       registry: ${{ inputs.registry }}
-      push_to_registry: ${{ inputs.push_to_registry }}
+      publish_to_registry: ${{ inputs.publish_to_registry }}
       runs-on: ${{ inputs.runs-on }}
     secrets: inherit

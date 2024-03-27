@@ -44,7 +44,7 @@ on:
         description: Python version
         required: true
         type: string
-      push_to_registry:
+      publish_to_registry:
         description: Wheter to push to the registry
         required: false
         type: string
@@ -58,6 +58,11 @@ on:
         required: false
         type: string
         default: "ghcr.io"
+      scan_only:
+        description: "Whether to only run the scan"
+        required: false
+        type: string
+        default: "false"
       runs-on:
         description: GitHub Actions Runner image
         required: true
@@ -97,10 +102,10 @@ jobs:
           python_version: ${{ inputs.python_version}}
           ci_repo: ${{ steps.registry-repos.outputs.ci_repo }}
           publish_repo: ${{ steps.registry-repos.outputs.publish_repo }}
-          push_to_registry: ${{ inputs.push_to_registry }}
+          publish_to_registry: ${{ inputs.publish_to_registry }}
 
       - name: Login to the CI registry (${{ github.actor }})
-        if: inputs.push_to_registry == 'false' && !startsWith(inputs.spark_version, '2.')
+        if: inputs.publish_to_registry == 'false' && !startsWith(inputs.spark_version, '2.') && inputs.scan_only == 'false'
         uses: docker/login-action@v3
         with:
           registry: ${{ inputs.ci_registry }}
@@ -108,7 +113,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push to ci registry
-        if: inputs.push_to_registry == 'false' && !startsWith(inputs.spark_version, '2.')
+        if: inputs.publish_to_registry == 'false' && !startsWith(inputs.spark_version, '2.') && inputs.scan_only == 'false'
         uses: docker/build-push-action@v5
         with:
           context: ${{ inputs.image }}
@@ -122,11 +127,11 @@ jobs:
             HADOOP_VERSION=${{ inputs.hadoop_version }}
             BASE_IMAGE=${{ steps.image-tags.outputs.parent_image }}
           tags: |
-            ${{ steps.registry-repos.outputs.ci_repo }}/${{ inputs.image }}:${{ steps.image-tags.outputs.ci_tag }}
+            ${{ steps.registry-repos.outputs.ci_repo }}/${{ inputs.image }}:${{ steps.image-tags.outputs.latest_tag }}
 
       # https://github.com/nektos/act/issues/678
       - name: Checkout integration tests tag v${{ inputs.spark_version }} (${{ inputs.spark_version}} > 3.0) ⚡️
-        if: inputs.push_to_registry == 'false' && !startsWith(inputs.spark_version, '2.')
+        if: inputs.publish_to_registry == 'false' && !startsWith(inputs.spark_version, '2.') && inputs.scan_only == 'false'
         id: git-checkout-tag
         run: |
             CHECKOUT_TAG_DIR="$(mktemp -d)/spark"
@@ -137,7 +142,7 @@ jobs:
         shell: bash
 
       - name: Prepare integration tests env (${{ inputs.spark_version}} > 3.0) 📦
-        if: inputs.push_to_registry == 'false' && !startsWith(inputs.spark_version, '2.')
+        if: inputs.publish_to_registry == 'false' && !startsWith(inputs.spark_version, '2.') && inputs.scan_only == 'false'
         uses: ./.github/actions/spark-tests-prepare
         with:
           spark_version: ${{ inputs.spark_version}}
@@ -145,20 +150,20 @@ jobs:
           java_version: ${{ inputs.java_version }}
 
       - name: Set up Kind integration tests cluster (${{ inputs.spark_version}} > 3.0) 📦
-        if: inputs.push_to_registry == 'false' && !startsWith(inputs.spark_version, '2.')
+        if: inputs.publish_to_registry == 'false' && !startsWith(inputs.spark_version, '2.') && inputs.scan_only == 'false'
         uses: ./.github/actions/setup-kind
 
       - name: Run integration tests (${{ inputs.spark_version}} > 3.0) ✅
-        if: inputs.push_to_registry == 'false' && !startsWith(inputs.spark_version, '2.')
+        if: inputs.publish_to_registry == 'false' && !startsWith(inputs.spark_version, '2.') && inputs.scan_only == 'false'
         uses: ./.github/actions/spark-tests-run
         with:
           ci-repo: ${{ steps.registry-repos.outputs.ci_repo }}
           image: ${{ inputs.image }}
-          image-tag: ${{ steps.image-tags.outputs.ci_tag }}
+          image-tag: ${{ steps.image-tags.outputs.latest_tag }}
           git_checkout_tag_dir: ${{ steps.git-checkout-tag.outputs.checkout_directory }}
 
       - name: Login to publish registry
-        if: inputs.push_to_registry == 'true'
+        if: inputs.publish_to_registry == 'true' && inputs.scan_only == 'false'
         uses: docker/login-action@v3
         with:
           registry: ${{ inputs.registry }}
@@ -166,7 +171,7 @@ jobs:
           password: ${{ secrets.REGISTRY_ROBOT_TOKEN }}
 
       - name: Build and push to publish registry
-        if: inputs.push_to_registry == 'true'
+        if: inputs.publish_to_registry == 'true' && inputs.scan_only == 'false'
         uses: docker/build-push-action@v5
         with:
           context: ${{ inputs.image }}
@@ -182,16 +187,16 @@ jobs:
           tags: ${{ steps.image-tags.outputs.publish_tags }}
 
       - name: Run Trivy vulnerability scanner
-        if: inputs.push_to_registry == 'false'
+        if: inputs.publish_to_registry == 'true' && inputs.scan_only == 'true'
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: '${{ steps.registry-repos.outputs.ci_repo }}/${{ inputs.image }}:${{ steps.image-tags.outputs.ci_tag }}'
+          image-ref: '${{ steps.registry-repos.outputs.publish_repo }}/${{ inputs.image }}:${{ steps.image-tags.outputs.latest_tag }}'
           format: 'sarif'
           output: 'trivy-results.sarif'
           timeout: '10m0s'
 
       - name: Upload Trivy scan results to GitHub Security tab
-        if: inputs.push_to_registry == 'false'
+        if: inputs.publish_to_registry == 'true' && inputs.scan_only == 'true'
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: 'trivy-results.sarif'
