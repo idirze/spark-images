@@ -56,17 +56,21 @@ jobs:
     if: github.repository_owner == 'idirze'
     runs-on: "ubuntu-latest"
     outputs:
-      git_latest_release_tag: ${{ steps.git-release-tag.outputs.git_latest_release_tag }}
+      tag_name: ${{ steps.git-release-tag.outputs.tag_name }}
     steps:
       - name: Checkout Repo ⚡️
         uses: actions/checkout@v4
 
       - name: Get latest GitHub Release tag name 📥
         id: git-release-tag
-        uses: ./.github/actions/github-release-tag
+        uses: InsonusK/get-latest-release@v1.0.1
+        with:
+          myToken: ${{ github.token }}
+          exclude_types: "draft"
+          view_top: 1
 
   spark-publish:
-    if: github.repository_owner == 'idirze' && needs.latest-github-release.outputs.git_latest_release_tag != ''
+    if: github.repository_owner == 'idirze' && needs.latest-github-release.outputs.tag_name != ''
     name: spark-publish (spark-${{ matrix.spark_version }})
     needs: [latest-github-release]
     strategy:
@@ -85,7 +89,7 @@ jobs:
       hadoop_version: ${{ matrix.hadoop_version }}
       registry: ${{ vars.REGISTRY || 'quay.io' }}
       publish_to_registry: "true"
-      git_latest_release_tag: ${{ needs.latest-github-release.outputs.git_latest_release_tag }}
+      git_latest_release_tag: ${{ needs.latest-github-release.outputs.tag_name }}
     secrets: inherit
 
       
