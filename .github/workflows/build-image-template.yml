@@ -104,7 +104,7 @@ jobs:
           publish_repo: ${{ steps.registry-repos.outputs.publish_repo }}
           publish_to_registry: ${{ inputs.publish_to_registry }}
 
-      - name: Login to the CI registry (${{ github.actor }})
+      - name: Login to the CI registry
         if: inputs.publish_to_registry == 'false' && !startsWith(inputs.spark_version, '2.') && inputs.scan_only == 'false'
         uses: docker/login-action@v3
         with:
@@ -130,7 +130,7 @@ jobs:
             ${{ steps.registry-repos.outputs.ci_repo }}/${{ inputs.image }}:${{ steps.image-tags.outputs.latest_tag }}
 
       # https://github.com/nektos/act/issues/678
-      - name: Checkout integration tests tag v${{ inputs.spark_version }} (${{ inputs.spark_version}} > 3.0) ⚡️
+      - name: Checkout integration tests tag v${{ inputs.spark_version }} (${{ inputs.spark_version}} > 3.0.0) ⚡️
         if: inputs.publish_to_registry == 'false' && !startsWith(inputs.spark_version, '2.') && inputs.scan_only == 'false'
         id: git-checkout-tag
         run: |
@@ -141,7 +141,7 @@ jobs:
             echo "checkout_directory=${CHECKOUT_TAG_DIR}" >> $GITHUB_OUTPUT
         shell: bash
 
-      - name: Prepare integration tests env (${{ inputs.spark_version}} > 3.0) 📦
+      - name: Prepare integration tests env (${{ inputs.spark_version}} > 3.0.0) 📦
         if: inputs.publish_to_registry == 'false' && !startsWith(inputs.spark_version, '2.') && inputs.scan_only == 'false'
         uses: ./.github/actions/spark-tests-prepare
         with:
@@ -149,11 +149,11 @@ jobs:
           scala_version: ${{ inputs.scala_version }}
           java_version: ${{ inputs.java_version }}
 
-      - name: Set up Kind integration tests cluster (${{ inputs.spark_version}} > 3.0) 📦
+      - name: Set up Kind integration tests cluster (${{ inputs.spark_version}} > 3.0.0) 📦
         if: inputs.publish_to_registry == 'false' && !startsWith(inputs.spark_version, '2.') && inputs.scan_only == 'false'
         uses: ./.github/actions/setup-kind
 
-      - name: Run integration tests (${{ inputs.spark_version}} > 3.0) ✅
+      - name: Run integration tests (${{ inputs.spark_version}} > 3.0.0) ✅
         if: inputs.publish_to_registry == 'false' && !startsWith(inputs.spark_version, '2.') && inputs.scan_only == 'false'
         uses: ./.github/actions/spark-tests-run
         with:
@@ -186,6 +186,12 @@ jobs:
             BASE_IMAGE=${{ steps.image-tags.outputs.parent_image }}
           tags: ${{ steps.image-tags.outputs.publish_tags }}
 
+
+      - name: test only
+        run: |
+          docker pull ${{ steps.registry-repos.outputs.publish_repo }}/${{ inputs.image }}:${{ steps.image-tags.outputs.latest_tag }}
+        shell: bash
+        
       - name: Run Trivy vulnerability scanner
         if: inputs.scan_only == 'true'
         uses: aquasecurity/trivy-action@master
