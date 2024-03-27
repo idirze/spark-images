@@ -182,7 +182,7 @@ jobs:
       ### Publish steps
       ### The publish and periodic rebuilds are based on the latest stable release tag
       - name: Login into publish registry 🔐
-        if: inputs.publish_to_registry == 'true'
+        if: inputs.publish_to_registry == 'true' && steps.git-release-tag.outputs.git_tag_name != ''
         uses: docker/login-action@v3
         with:
           registry: ${{ inputs.registry }}
@@ -190,7 +190,7 @@ jobs:
           password: ${{ secrets.REGISTRY_ROBOT_TOKEN }}
 
       - name: Build and push to publish registry 📤
-        if: inputs.publish_to_registry == 'true'
+        if: inputs.publish_to_registry == 'true' && steps.git-release-tag.outputs.git_tag_name != ''
         uses: docker/build-push-action@v5
         with:
           context: ${{ inputs.image }}
