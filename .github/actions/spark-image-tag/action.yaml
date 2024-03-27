@@ -79,7 +79,7 @@ runs:
         java_version=${{ inputs.java_version }}
         python_version=${{ inputs.python_version }}
         git_tag_name=${{ inputs.git_tag_name }}
-        git_release_version=$(echo '${{ inputs.git_release_version }}' | tr -d 'v')
+        git_release_version=$(echo '${{ inputs.git_tag_name }}' | tr -d 'v')
 
         git_commit_sha=${{ env.GIT_COMMIT_SHA }}
         git_commit_short_sha=${{ env.GIT_COMMIT_SHORT_SHA }}
