@@ -68,6 +68,16 @@ jobs:
           myToken: ${{ github.token }}
           exclude_types: "draft"
           view_top: 1
+      
+      - name: Info - Found latest release tag
+        run: |
+            echo "id: ${{ steps.git-release-tag.outputs.id }}"
+            echo "name: ${{ steps.git-release-tag.outputs.name }}"
+            echo "tag_name: ${{ steps.git-release-tag.outputs.tag_name }}"
+            echo "created_at: ${{ steps.git-release-tag.outputs.created_at }}"
+            echo "draft: ${{ steps.git-release-tag.outputs.draft }}"
+            echo "prerelease: ${{ steps.git-release-tag.outputs.prerelease }}"
+        shell: bash
 
   spark-publish:
     if: github.repository_owner == 'idirze' && needs.latest-github-release.outputs.tag_name != ''
