@@ -58,6 +58,11 @@ on:
         required: false
         type: string
         default: "ghcr.io"
+      git_latest_release_tag:
+        description: The latest remote release tag 
+        required: false
+        type: string
+        default: ""
       runs-on:
         description: GitHub Actions Runner image
         required: true
@@ -71,20 +76,11 @@ jobs:
     steps:
 
       ### The publish and periodic rebuilds are based on the latest stable release tag
-      - name: Retreive latest remote git tag and release version  📥
+      - name: Checkout latest Github Release tag (${{ inputs.git_latest_release_tag }}) ⚡️
         if: inputs.publish_to_registry == 'true'
-        id: git-release-tag
-        run: |
-          GIT_LATEST_REL_TAG=$(curl -s https://api.github.com/repos/${{ github.repository }}/releases/latest | jq -e  'select (.tag_name != null) | .tag_name' || true)
-          echo "git_tag_name=${GIT_LATEST_REL_TAG}" >> $GITHUB_OUTPUT
-          echo "Latest release tag name: ${git_tag_name}"
-        shell: bash
-
-      - name: Checkout latest Github Release tag (${{ steps.git-release-tag.outputs.git_tag_name }}) ⚡️
-        if: inputs.publish_to_registry == 'true' && steps.git-release-tag.outputs.git_tag_name != ''
         uses: actions/checkout@v4
         with:
-          ref: ${{ steps.git-release-tag.outputs.git_tag_name }}
+          ref: ${{ inputs.git_latest_release_tag }}
       
       ### The CI is based on the main branch
       - name: Checkout Repo ⚡️
@@ -118,7 +114,7 @@ jobs:
           ci_repo: ${{ steps.registry-repos.outputs.ci_repo }}
           publish_repo: ${{ steps.registry-repos.outputs.publish_repo }}
           publish_to_registry: ${{ inputs.publish_to_registry }}
-          git_tag_name: ${{ steps.git-release-tag.outputs.git_tag_name }}
+          git_tag_name: ${{ inputs.git_latest_release_tag }}
 
       - name: Login to the CI registry 🔐
         if: inputs.publish_to_registry == 'false' && !startsWith(inputs.spark_version, '2.')

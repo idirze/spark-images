@@ -51,9 +51,21 @@ permissions:
   packages: write
   
 jobs:
-    
+  
+  latest-github-release:
+    if: github.repository_owner == 'idirze'
+    runs-on: "ubuntu-latest"
+    outputs:
+      git_latest_release_tag: ${{ steps.git-release-tag.outputs.git_latest_release_tag != '' }}
+    steps:
+      - name: Get latest GitHub Release tag name 📥
+        id: git-release-tag
+        uses: ./.github/actions/github-release-tag
+
   spark-publish:
+    if: github.repository_owner == 'idirze' && needs.latest-github-release.outputs.git_latest_release_tag != ''
     name: spark-publish (spark-${{ matrix.spark_version }})
+    needs: [latest-github-release]
     strategy:
       matrix: 
         python_version: [3.11]
@@ -70,6 +82,7 @@ jobs:
       hadoop_version: ${{ matrix.hadoop_version }}
       registry: ${{ vars.REGISTRY || 'quay.io' }}
       publish_to_registry: "true"
+      git_latest_release_tag: ${{ needs.latest-github-release.outputs.git_latest_release_tag }}
     secrets: inherit
 
       
