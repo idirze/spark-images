@@ -180,3 +180,19 @@ jobs:
             HADOOP_VERSION=${{ inputs.hadoop_version }}
             BASE_IMAGE=${{ steps.image-tags.outputs.parent_image }}
           tags: ${{ steps.image-tags.outputs.publish_tags }}
+
+      - name: Run Trivy vulnerability scanner
+        if: inputs.push_to_registry == 'false'
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: '${{ steps.registry-repos.outputs.ci_repo }}/${{ inputs.image }}:${{ steps.image-tags.outputs.ci_tag }}'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          timeout: '10m0s'
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        if: inputs.push_to_registry == 'false'
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-results.sarif'
+          category: ${{ inputs.image }}
