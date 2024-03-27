@@ -168,7 +168,7 @@ jobs:
         if: inputs.publish_to_registry == 'true'
         id: git-release-tag
         run: |
-          GIT_LATEST_REL_TAG=$(curl -s https://api.github.com/repos/${{ github.repository }}/releases/latest | jq -e  'select (.tag_name != null) | .tag_name' | sub("v"; "") || true)
+          GIT_LATEST_REL_TAG=$(curl -s https://api.github.com/repos/${{ github.repository }}/releases/latest | jq -e  'select (.tag_name != null) | .tag_name | sub("v"; "")' || true)
           echo "git_tag_name=v${GIT_LATEST_REL_TAG}" >> $GITHUB_OUTPUT
           echo "git_release_version=${GIT_LATEST_REL_TAG}" >> $GITHUB_OUTPUT
           echo "Latest release tag name: ${git_tag_name}"
