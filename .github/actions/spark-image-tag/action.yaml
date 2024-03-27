@@ -75,6 +75,7 @@ runs:
         java_version=${{ inputs.java_version }}
         python_version=${{ inputs.python_version }}
         git_commit_sha=${{ env.GIT_COMMIT_SHA }}
+        git_commit_short_sha=${{ env.GIT_COMMIT_SHORT_SHA }}
         
         ### Outputs - Parse: .build/images.yml
         PARENT_IMAGE_NAME=$(yq '(.images[] | select(.name == "${{ inputs.image }}").dependsOn)' .build/images.yml)
