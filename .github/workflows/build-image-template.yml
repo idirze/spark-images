@@ -191,7 +191,9 @@ jobs:
     name: ${{ inputs.image }} (scala-${{ inputs.scala_version }}, java-${{ inputs.java_version }}, python-${{ inputs.python_version }})
     runs-on: ${{ inputs.runs-on }}
     needs: [build-test-push]
-    if: needs.build-test-push.result == 'success' || needs.build-test-push.result == 'skipped'
+    if: |
+       always() && 
+       (needs.build-test-push.result == 'success' || needs.build-test-push.result == 'skipped')
     steps:
       - name: Checkout Repo ⚡️
         uses: actions/checkout@v4
