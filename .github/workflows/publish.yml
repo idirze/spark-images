@@ -56,11 +56,11 @@ jobs:
     if: github.repository_owner == 'idirze'
     runs-on: "ubuntu-latest"
     outputs:
-      git_latest_release_tag: ${{ steps.git-release-tag.outputs.git_latest_release_tag != '' }}
+      git_latest_release_tag: ${{ steps.git-release-tag.outputs.git_latest_release_tag }}
     steps:
       - name: Checkout Repo ⚡️
         uses: actions/checkout@v4
-        
+
       - name: Get latest GitHub Release tag name 📥
         id: git-release-tag
         uses: ./.github/actions/github-release-tag
