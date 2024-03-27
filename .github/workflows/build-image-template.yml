@@ -223,7 +223,8 @@ jobs:
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: '${{ steps.registry-repos.outputs.publish_repo }}/${{ inputs.image }}:${{ steps.image-tags.outputs.latest_tag }}'
-          format: 'sarif'
+          format: 'template'
+          template: '@/contrib/sarif.tpl'
           output: 'trivy-results.sarif'
           timeout: '10m0s'
 
