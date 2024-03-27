@@ -187,7 +187,7 @@ jobs:
           tags: ${{ steps.image-tags.outputs.publish_tags }}
 
       - name: Run Trivy vulnerability scanner
-        if: inputs.publish_to_registry == 'true' && inputs.scan_only == 'true'
+        if: inputs.scan_only == 'true'
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: '${{ steps.registry-repos.outputs.publish_repo }}/${{ inputs.image }}:${{ steps.image-tags.outputs.latest_tag }}'
@@ -196,7 +196,7 @@ jobs:
           timeout: '10m0s'
 
       - name: Upload Trivy scan results to GitHub Security tab
-        if: inputs.publish_to_registry == 'true' && inputs.scan_only == 'true'
+        if: inputs.scan_only == 'true'
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: 'trivy-results.sarif'
