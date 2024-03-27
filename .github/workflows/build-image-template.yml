@@ -164,24 +164,24 @@ jobs:
 
       ### Publish steps
       ### The publish and periodic rebuilds are based on the latest stable release tag
-      - name: Get the latest release tag name 📥
+      - name: Get latest GitHub Release tag name 📥
         if: inputs.publish_to_registry == 'true'
         id: release-tag
         run: |
-          LATEST_TAG="$(curl -s https://api.github.com/repos/${{ github.repository }}/releases/latest | jq -e  'select (.tag_name != null) | .tag_name' || true)"
-          echo "tag_name=${LATEST_TAG}" >> $GITHUB_OUTPUT
-          echo "Latest release tag name: ${tag_name}"
+          GIT_LATEST_REL_TAG="$(curl -s https://api.github.com/repos/${{ github.repository }}/releases/latest | jq -e  'select (.tag_name != null) | .tag_name' || true)"
+          echo "git_tag_name=${GIT_LATEST_REL_TAG}" >> $GITHUB_OUTPUT
+          echo "Latest release tag name: ${git_tag_name}"
         shell: bash
 
-      - name: Checkout the latest release tag (${{ steps.release-tag.outputs.tag_name }}) ⚡️
-        if: inputs.publish_to_registry == 'true' && steps.release-tag.outputs.tag_name != ''
+      - name: Checkout latest Github Release tag (${{ steps.release-tag.outputs.git_tag_name }}) ⚡️
+        if: inputs.publish_to_registry == 'true' && steps.release-tag.outputs.git_tag_name != ''
         run: |
-          git checkout tags/v${{ steps.release-tag.outputs.tag_name }}
+          git checkout tags/v${{ steps.release-tag.outputs.git_tag_name }}
           git branch -l
         shell: bash
 
-      - name: Login to publish registry 🔐
-        if: inputs.publish_to_registry == 'true' && steps.release-tag.outputs.tag_name != ''
+      - name: Login into publish registry 🔐
+        if: inputs.publish_to_registry == 'true' && steps.release-tag.outputs.git_tag_name != ''
         uses: docker/login-action@v3
         with:
           registry: ${{ inputs.registry }}
@@ -189,7 +189,7 @@ jobs:
           password: ${{ secrets.REGISTRY_ROBOT_TOKEN }}
 
       - name: Build and push to publish registry 📤
-        if: inputs.publish_to_registry == 'true' && steps.release-tag.outputs.tag_name != ''
+        if: inputs.publish_to_registry == 'true' && steps.release-tag.outputs.git_tag_name != ''
         uses: docker/build-push-action@v5
         with:
           context: ${{ inputs.image }}
