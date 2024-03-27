@@ -67,7 +67,6 @@ jobs:
       hadoop_version: ${{ inputs.hadoop_version }}
       registry: ${{ inputs.registry }}
       publish_to_registry: ${{ inputs.publish_to_registry }}
-      scan_only: ${{ inputs.scan_only }}
       runs-on: ${{ inputs.runs-on }}
     secrets: inherit
 
@@ -83,7 +82,6 @@ jobs:
       hadoop_version: ${{ inputs.hadoop_version }}
       registry: ${{ inputs.registry }}
       publish_to_registry: ${{ inputs.publish_to_registry }}
-      scan_only: ${{ inputs.scan_only }}
       runs-on: ${{ inputs.runs-on }}
     secrets: inherit
 
@@ -114,6 +112,6 @@ jobs:
       hadoop_version: ${{ inputs.hadoop_version }}
       registry: ${{ inputs.registry }}
       publish_to_registry: ${{ inputs.publish_to_registry }}
-      scan_only: ${{ inputs.scan_only }}
+  
       runs-on: ${{ inputs.runs-on }}
     secrets: inherit
