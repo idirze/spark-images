@@ -49,7 +49,6 @@ concurrency:
 
 permissions:
   packages: write
-  security-events: write
   
 jobs:
     

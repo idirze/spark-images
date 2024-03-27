@@ -58,11 +58,6 @@ on:
         required: false
         type: string
         default: "ghcr.io"
-      scan_only:
-        description: "Whether to only run the scan"
-        required: false
-        type: string
-        default: "false"
       runs-on:
         description: GitHub Actions Runner image
         required: true
@@ -71,12 +66,15 @@ on:
 jobs:
   
   build-test-push:
-    if: inputs.scan_only == 'false'
     name: ${{ inputs.image }} (scala-${{ inputs.scala_version }}, java-${{ inputs.java_version }}, python-${{ inputs.python_version }})
     runs-on: ${{ inputs.runs-on }}
     steps:
+      ### Common steps between CI and Publish
       - name: Checkout Repo ⚡️
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
 
       - name: Free up disk space 📦
         uses: ./.github/actions/free-disk-space
@@ -105,7 +103,7 @@ jobs:
           publish_repo: ${{ steps.registry-repos.outputs.publish_repo }}
           publish_to_registry: ${{ inputs.publish_to_registry }}
 
-      - name: Login to the CI registry
+      - name: Login to the CI registry 🔐
         if: inputs.publish_to_registry == 'false' && !startsWith(inputs.spark_version, '2.')
         uses: docker/login-action@v3
         with:
@@ -130,6 +128,7 @@ jobs:
           tags: |
             ${{ steps.registry-repos.outputs.ci_repo }}/${{ inputs.image }}:${{ steps.image-tags.outputs.latest_tag }}
 
+      ### CI Steps
       # https://github.com/nektos/act/issues/678
       - name: Checkout integration tests tag v${{ inputs.spark_version }} (${{ inputs.spark_version}} > 3.0.0) ⚡️
         if: inputs.publish_to_registry == 'false' && !startsWith(inputs.spark_version, '2.')
@@ -163,16 +162,33 @@ jobs:
           image-tag: ${{ steps.image-tags.outputs.latest_tag }}
           git_checkout_tag_dir: ${{ steps.git-checkout-tag.outputs.checkout_directory }}
 
-      - name: Login to publish registry
+      ### Publish steps
+      ### The publish and periodic rebuilds are based on the latest stable release tag
+      - name: Get the latest release tag name 📥
         if: inputs.publish_to_registry == 'true'
+        id: release-tag
+        run: |
+          LATEST_TAG="$(curl -s https://api.github.com/repos/${{ github.repository_owner }}/${{ github.repository }}/releases/latest | jq -e  'select (.tag_name != null) | .tag_name')"
+          echo "tag_name=${LATEST_TAG}" >> $GITHUB_OUTPUT
+          echo "Latest release tag name: ${tag_name}"
+        shell: bash
+
+      - name: Checkout the latest release tag (${{ steps.release-tag.outputs.tag_name }}) ⚡️
+        if: inputs.publish_to_registry == 'true' && steps.release-tag.outputs.tag_name != ''
+        run: |
+          git checkout tags/v${{ steps.release-tag.outputs.tag_name }}
+        shell: bash
+
+      - name: Login to publish registry 🔐
+        if: inputs.publish_to_registry == 'true' && steps.release-tag.outputs.tag_name != ''
         uses: docker/login-action@v3
         with:
           registry: ${{ inputs.registry }}
           username: ${{ secrets.REGISTRY_USERNAME }}
           password: ${{ secrets.REGISTRY_ROBOT_TOKEN }}
 
-      - name: Build and push to publish registry
-        if: inputs.publish_to_registry == 'true'
+      - name: Build and push to publish registry 📤
+        if: inputs.publish_to_registry == 'true' && steps.release-tag.outputs.tag_name != ''
         uses: docker/build-push-action@v5
         with:
           context: ${{ inputs.image }}
@@ -187,49 +203,4 @@ jobs:
             BASE_IMAGE=${{ steps.image-tags.outputs.parent_image }}
           tags: ${{ steps.image-tags.outputs.publish_tags }}
 
-  scan-image:
-    name: ${{ inputs.image }} (scala-${{ inputs.scala_version }}, java-${{ inputs.java_version }}, python-${{ inputs.python_version }})
-    runs-on: ${{ inputs.runs-on }}
-    needs: [build-test-push]
-    if: |
-       always() && 
-       (needs.build-test-push.result == 'success' || needs.build-test-push.result == 'skipped')
-    steps:
-      - name: Checkout Repo ⚡️
-        uses: actions/checkout@v4
 
-      - name: Set up CI and Publish registries 📦
-        id: registry-repos
-        run:  |
-            echo "repo_owner=${GITHUB_REPOSITORY_OWNER@L}" >> $GITHUB_OUTPUT
-            echo "ci_repo=${{ inputs.ci_registry }}/${GITHUB_REPOSITORY_OWNER@L}" >> $GITHUB_OUTPUT
-            echo "publish_repo=${{ inputs.registry }}/${GITHUB_REPOSITORY_OWNER@L}" >> $GITHUB_OUTPUT
-        shell: bash
-
-      - name: Generate image tags 📦
-        id: image-tags
-        uses: ./.github/actions/spark-image-tag
-        with:
-          image: ${{ inputs.image }}
-          spark_version: ${{ inputs.spark_version}}
-          scala_version: ${{ inputs.scala_version }}
-          java_version: ${{ inputs.java_version }}
-          python_version: ${{ inputs.python_version}}
-          ci_repo: ${{ steps.registry-repos.outputs.ci_repo }}
-          publish_repo: ${{ steps.registry-repos.outputs.publish_repo }}
-          publish_to_registry: ${{ inputs.publish_to_registry }}
-
-      - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: '${{ steps.registry-repos.outputs.publish_repo }}/${{ inputs.image }}:${{ steps.image-tags.outputs.latest_tag }}'
-          format: 'template'
-          template: '@/contrib/sarif.tpl'
-          output: 'trivy-results.sarif'
-          timeout: '10m0s'
-
-      - name: Upload Trivy scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: 'trivy-results.sarif'
-          category: ${{ inputs.image }}
