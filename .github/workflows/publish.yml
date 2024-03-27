@@ -58,6 +58,9 @@ jobs:
     outputs:
       git_latest_release_tag: ${{ steps.git-release-tag.outputs.git_latest_release_tag != '' }}
     steps:
+      - name: Checkout Repo ⚡️
+        uses: actions/checkout@v4
+        
       - name: Get latest GitHub Release tag name 📥
         id: git-release-tag
         uses: ./.github/actions/github-release-tag
