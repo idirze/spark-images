@@ -188,6 +188,10 @@ jobs:
           tags: ${{ steps.image-tags.outputs.publish_tags }}
 
   scan-image:
+    permissions:
+      contents: read
+      security-events: write
+      actions: read 
     name: ${{ inputs.image }} (scala-${{ inputs.scala_version }}, java-${{ inputs.java_version }}, python-${{ inputs.python_version }})
     runs-on: ${{ inputs.runs-on }}
     needs: [build-test-push]
