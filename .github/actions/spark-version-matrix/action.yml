@@ -34,7 +34,7 @@ runs:
     - name: Generate Matrix
       id: generate-matrix
       run: |
-      
+
           BUILD_VERSION_FILE=".build/versions.yml"
           if [[ "${{ inputs.test_only }}" == "true" ]]
           then
@@ -58,10 +58,11 @@ runs:
 
           ### Intersection between the .version matrix and the reference matrix
           ### When the intersection is empty, the jobs are skipped!
-          MATRIX=$(jq --argjson IN ${INPUT_MATRIX} --argjson REF ${REF_MATRIX} -cn '$IN - ($IN- $REF)' | jq .)
+          MATRIX=$(jq --argjson IN ${INPUT_MATRIX} --argjson REF ${REF_MATRIX} -cn '$IN - ($IN- $REF)')
 
           LENGHT=$(echo ${MATRIX} | jq '. | length')
           echo "${MATRIX}"
           echo "Found ${LENGHT} matrix combinations"
           echo "matrix=${MATRIX}" >> $GITHUB_OUTPUT
+
       shell: bash
