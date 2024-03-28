@@ -35,6 +35,7 @@ outputs:
 
 runs:
   using: composite
+  # https://github.com/apache/spark/blob/master/.github/workflows/build_and_test.yml
   steps:
     - name: Set up Java ${{ inputs.java_version }}
       uses: actions/setup-java@v4

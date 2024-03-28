@@ -173,6 +173,7 @@ jobs:
           ci-repo: ${{ steps.registry-repos.outputs.ci_repo }}
           image: ${{ inputs.image }}
           image-tag: ${{ steps.image-tags.outputs.latest_tag }}
+          scala_version: ${{ inputs.scala_version }}
           git_checkout_tag_dir: ${{ steps.git-checkout-tag.outputs.checkout_directory }}
 
       ### Publish steps

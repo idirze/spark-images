@@ -27,6 +27,9 @@ inputs:
   image-tag:
     description: Spark image tag to test (ex. latest)
     required: true
+  scala_version:
+    description: Scala version
+    required: true
   git_checkout_tag_dir:
     description: Git checkout tag directory
     required: true
@@ -35,7 +38,7 @@ runs:
   using: composite
   steps:
     # https://github.com/apache/spark/tree/master/resource-managers/kubernetes/integration-tests
-    # https://github.com/apache/spark-docker/blob/master/.github/workflows/main.yml
+    # https://github.com/apache/spark/blob/master/.github/workflows/build_and_test.yml
     - name: Load image ${{ inputs.image }} into Kind and setup Spark RBACs
       run: |
           kubectl create clusterrolebinding serviceaccounts-cluster-admin --clusterrole=cluster-admin --group=system:serviceaccounts || true
@@ -43,10 +46,16 @@ runs:
           kind load docker-image ${{ inputs.ci-repo}}/${{ inputs.image }}:${{ inputs.image-tag }} --name kind-ci-${{ github.job }}
       shell: bash
 
+    - name: Change Scala version to ${{ inputs.scala_version }}
+      run: |
+         ./dev/change-scala-version.sh ${{ inputs.scala_version }}
+         echo "SCALA_PROFILE=scala-${{ inputs.scala_version }}" >> $GITHUB_ENV
+      shell: bash
+
     - name: Run base integration tests (${{ inputs.image }})
       if: inputs.image == 'spark-base' || inputs.image == 'spark'
       run: |
-          build/sbt -Pkubernetes -Pkubernetes-integration-tests \
+          build/sbt -P${{ env.SCALA_PROFILE }} -Pkubernetes -Pkubernetes-integration-tests \
                     -Dspark.kubernetes.test.driverRequestCores=0.5 -Dspark.kubernetes.test.executorRequestCores=0.2 \
                     -Dspark.kubernetes.test.deployMode=cloud  \
                     -Dspark.kubernetes.test.imageRepo=${{ inputs.ci-repo}} -Dspark.kubernetes.test.imageTag=${{ inputs.image-tag }} \
@@ -62,7 +71,7 @@ runs:
     - name: Run spark-py integration tests (${{ inputs.image }})
       if: inputs.image == 'spark-py'
       run: |
-          build/sbt -Pkubernetes -Pkubernetes-integration-tests \
+          build/sbt -P${{ env.SCALA_PROFILE }} -Pkubernetes -Pkubernetes-integration-tests \
                     -Dspark.kubernetes.test.driverRequestCores=0.5 -Dspark.kubernetes.test.executorRequestCores=0.2 \
                     -Dspark.kubernetes.test.deployMode=cloud  \
                     -Dspark.kubernetes.test.imageRepo=${{ inputs.ci-repo}} -Dspark.kubernetes.test.imageTag=${{ inputs.image-tag }} \
@@ -78,7 +87,7 @@ runs:
     - name: Run spark-r integration tests (${{ inputs.image }})
       if: inputs.image == 'spark-r'
       run: |
-          build/sbt -Pkubernetes -Pkubernetes-integration-tests \
+          build/sbt -P${{ env.SCALA_PROFILE }} -Pkubernetes -Pkubernetes-integration-tests \
                     -Dspark.kubernetes.test.driverRequestCores=0.5 -Dspark.kubernetes.test.executorRequestCores=0.2 \
                     -Dspark.kubernetes.test.deployMode=cloud  \
                     -Dspark.kubernetes.test.imageRepo=${{ inputs.ci-repo}} -Dspark.kubernetes.test.imageTag=${{ inputs.image-tag }} \
@@ -95,7 +104,7 @@ runs:
     # - name: Run All integration tests (${{ inputs.image }})
     #   if: inputs.image == 'spark-py-r'
     #   run: |
-    #       build/sbt -Pkubernetes -Pkubernetes-integration-tests \
+    #       build/sbt -P${{ env.SCALA_PROFILE }} -Pkubernetes -Pkubernetes-integration-tests \
     #                 -Dspark.kubernetes.test.driverRequestCores=0.5 -Dspark.kubernetes.test.executorRequestCores=0.2 \
     #                 -Dspark.kubernetes.test.deployMode=cloud  \
     #                 -Dspark.kubernetes.test.imageRepo=${{ inputs.ci-repo}} -Dspark.kubernetes.test.imageTag=${{ inputs.image-tag }} \
