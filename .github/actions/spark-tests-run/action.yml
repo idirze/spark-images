@@ -50,6 +50,8 @@ runs:
       run: |
          ./dev/change-scala-version.sh ${{ inputs.scala_version }}
          echo "SCALA_PROFILE=scala-${{ inputs.scala_version }}" >> $GITHUB_ENV
+      
+      working-directory: ${{ inputs.git_checkout_tag_dir }}
       shell: bash
 
     - name: Run base integration tests (${{ inputs.image }})
