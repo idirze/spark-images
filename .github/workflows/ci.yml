@@ -71,12 +71,13 @@ jobs:
     name: spark-ci (spark-${{ matrix.spark_version }})
     needs: [get-test-versions-matrix]
     strategy:
-      matrix: ${{ fromJson(needs.get-test-versions-matrix.outputs.matrix) }}
+      matrix: 
+        version: ${{ fromJson(needs.get-test-versions-matrix.outputs.matrix) }}
     uses: ./.github/workflows/build-images-template.yml
     with:
-      python_version: ${{ matrix.python_version }}
-      spark_version: ${{ matrix.spark_version }}
-      java_version: ${{ matrix.java_version }}
-      scala_version: ${{ matrix.scala_version }}
-      hadoop_version: ${{ matrix.hadoop_version }}
+      python_version: ${{ matrix.version.python_version }}
+      spark_version: ${{ matrix.version.spark_version }}
+      java_version: ${{ matrix.version.java_version }}
+      scala_version: ${{ matrix.version.scala_version }}
+      hadoop_version: ${{ matrix.version.hadoop_version }}
       publish_to_registry: "false"

@@ -62,7 +62,7 @@ runs:
 
           LENGHT=$(echo ${MATRIX} | jq '. | length')
           echo "${MATRIX}"
-          echo "Found ${LENGHT} matrix combinations"
+          echo "Found ${LENGHT} compatible version combinations"
           echo "matrix=${MATRIX}" >> $GITHUB_OUTPUT
 
       shell: bash
