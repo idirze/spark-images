@@ -18,7 +18,7 @@
 #### !!! DOT NOT DELETE ANY ELEMENT !!! ####################
 ######## APPEND ONLY WHEN NEW SPARK VERSION IS REALEASED ###
 ############ USED AS REFERENCE DURING BUILD ################
-version:
+versions:
   # Maximum python version supported by spark-3.2.x: 3.9
   # Java support: 8/11
   - python_version: 3.9

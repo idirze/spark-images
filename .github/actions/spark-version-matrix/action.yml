@@ -41,14 +41,14 @@ runs:
              BUILD_VERSION_FILE=".build/ci-versions.yml"
           fi
 
-          INPUT_MATRIX=$(yq -oj ${BUILD_VERSION_FILE} | jq '.version | .[] | 
+          INPUT_MATRIX=$(yq -oj ${BUILD_VERSION_FILE} | jq '.versions | .[] | 
                {python_version: .python_version, 
                hadoop_version: .hadoop_version, 
                spark_dist_download_url: .spark_dist_download_url} + 
                (.spark_version[] | {spark_version: .}) + 
                (.scala_version[] | {scala_version: .}) +
                (.java_version[] | {java_version: .})' | jq -c --slurp '.')
-          REF_MATRIX=$(yq -oj .build/reference-versions.yml | jq '.version | .[] | 
+          REF_MATRIX=$(yq -oj .build/reference-versions.yml | jq '.versions | .[] | 
                {python_version: .python_version, 
                hadoop_version: .hadoop_version, 
                spark_dist_download_url: .spark_dist_download_url} + 
@@ -56,7 +56,7 @@ runs:
                (.scala_version[] | {scala_version: .}) +
                (.java_version[] | {java_version: .})' | jq -c --slurp '.')
 
-          ### Intersection between the .version matrix and the reference matrix
+          ### Intersection between the versions matrix and the reference versions matrix 
           ### When the intersection is empty, the jobs are skipped!
           MATRIX=$(jq --argjson IN ${INPUT_MATRIX} --argjson REF ${REF_MATRIX} -cn '$IN - ($IN- $REF)')
 

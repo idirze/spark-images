@@ -18,7 +18,7 @@
 #### PUT THE SPARK VERSIONS TO TEST IN CORRESPONDANCE WITH 'reference-versions.yml' FILE ###############################
 #### !!! ANY DECLARED TEST VERSION WHICH IS NOT PRESENT IN 'reference-versions.yml' FILE IS SKIPPED DURING BUILD !!! ###
 #### REMOVE, UPDATE OR ADD VERSIONS TO TEST ############################################################################
-version:
+versions:
   # Maximum python version supported by spark-3.2.x: 3.9
   # Java support: 8/11
   - python_version: 3.9
