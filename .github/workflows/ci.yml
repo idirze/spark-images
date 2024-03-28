@@ -72,6 +72,7 @@ jobs:
     name: spark-ci (spark-${{ matrix.version.spark_version }})
     needs: [get-ci-versions]
     strategy:
+      fail-fast: false
       matrix: 
         version: ${{ fromJson(needs.get-ci-versions.outputs.matrix) }}
     uses: ./.github/workflows/build-images-template.yml
