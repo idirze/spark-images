@@ -51,16 +51,27 @@ permissions:
   packages: write
   
 jobs:
-    
+
+  get-test-versions-matrix:
+    if: github.repository_owner == 'idirze'
+    runs-on: "ubuntu-latest"
+    outputs:
+      matrix: ${{ steps.test-versions.outputs.matrix }}
+    steps:
+      - name: Checkout Repo ⚡️
+        uses: actions/checkout@v4
+
+      - name: Get test versions matrix 📥
+        id: test-versions
+        uses: ./.github/actions/spark-version-matrix
+        with:
+          test_only: "true"
+
   spark-ci:
     name: spark-ci (spark-${{ matrix.spark_version }})
+    needs: [get-test-versions-matrix]
     strategy:
-      matrix: 
-        python_version: [3.11]
-        spark_version: [3.3.4, 3.4.2]
-        java_version: [17]
-        scala_version: [2.12, 2.13]
-        hadoop_version: [3]
+      matrix: ${{ fromJson(needs.get-test-versions-matrix.outputs.matrix) }}
     uses: ./.github/workflows/build-images-template.yml
     with:
       python_version: ${{ matrix.python_version }}
