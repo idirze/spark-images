@@ -54,7 +54,7 @@ permissions:
   
 jobs:
 
-  get-ci-versions-matrix:
+  get-ci-versions:
     if: github.repository_owner == 'idirze'
     runs-on: "ubuntu-latest"
     outputs:
@@ -71,10 +71,10 @@ jobs:
 
   spark-ci:
     name: spark-ci (spark-${{ matrix.version.spark_version }})
-    needs: [get-ci-versions-matrix]
+    needs: [get-ci-versions]
     strategy:
       matrix: 
-        version: ${{ fromJson(needs.get-ci-versions-matrix.outputs.matrix) }}
+        version: ${{ fromJson(needs.get-ci-versions.outputs.matrix) }}
     uses: ./.github/workflows/build-images-template.yml
     with:
       python_version: ${{ matrix.version.python_version }}

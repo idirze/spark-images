@@ -65,24 +65,33 @@ jobs:
             echo "prerelease: ${{ steps.git-release-tag.outputs.prerelease }}"
         shell: bash
 
+  get-release-versions:
+    if: github.repository_owner == 'idirze'
+    runs-on: "ubuntu-latest"
+    outputs:
+      matrix: ${{ steps.release-versions.outputs.matrix }}
+    steps:
+      - name: Checkout Repo ⚡️
+        uses: actions/checkout@v4
+
+      - name: Get release versions matrix 📥
+        id: release-versions
+        uses: ./.github/actions/spark-version-matrix
+
   spark-publish:
     if: github.repository_owner == 'idirze' && needs.latest-github-release.outputs.tag_name != ''
-    name: spark-publish (spark-${{ matrix.spark_version }})
-    needs: [latest-github-release]
+    name: spark-publish (spark-${{ matrix.version.spark_version }})
+    needs: [latest-github-release, get-release-versions]
     strategy:
       matrix: 
-        python_version: [3.11]
-        spark_version: [3.3.3, 3.3.4]
-        java_version: [17]
-        scala_version: [2.12]
-        hadoop_version: [3]
+        version: ${{ fromJson(needs.get-release-versions.outputs.matrix) }}
     uses: ./.github/workflows/build-images-template.yml
     with:
-      python_version: ${{ matrix.python_version }}
-      spark_version: ${{ matrix.spark_version }}
-      java_version: ${{ matrix.java_version }}
-      scala_version: ${{ matrix.scala_version }}
-      hadoop_version: ${{ matrix.hadoop_version }}
+      python_version: ${{ matrix.version.python_version }}
+      spark_version: ${{ matrix.version.spark_version }}
+      java_version: ${{ matrix.version.java_version }}
+      scala_version: ${{ matrix.version.scala_version }}
+      hadoop_version: ${{ matrix.version.hadoop_version }}
       registry: ${{ vars.REGISTRY || 'quay.io' }}
       publish_to_registry: "true"
       git_latest_release_tag: ${{ needs.latest-github-release.outputs.tag_name }}

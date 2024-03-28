@@ -35,7 +35,7 @@ runs:
       id: generate-matrix
       run: |
 
-          BUILD_VERSION_FILE=".build/versions.yml"
+          BUILD_VERSION_FILE=".build/release-versions.yml"
           if [[ "${{ inputs.ci_only }}" == "true" ]]
           then
              BUILD_VERSION_FILE=".build/ci-versions.yml"
