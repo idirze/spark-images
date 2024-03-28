@@ -21,6 +21,7 @@ on:
     paths:
       - ".github/workflows/**"
       - ".github/actions/**"
+      - ".build/**"
 
       - "spark/**"
       - "spark-*/**"
@@ -33,6 +34,7 @@ on:
     paths:
       - ".github/workflows/**"
       - ".github/actions/**"
+      - ".build/**"
   
       - "spark/**"
       - "spark-*/**"
