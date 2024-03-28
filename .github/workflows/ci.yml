@@ -55,7 +55,6 @@ permissions:
 jobs:
 
   get-ci-versions:
-    if: github.repository_owner == 'idirze'
     runs-on: "ubuntu-latest"
     outputs:
       matrix: ${{ steps.ci-versions.outputs.matrix }}
