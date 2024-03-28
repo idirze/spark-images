@@ -38,6 +38,7 @@ runs:
   using: composite
   # https://github.com/apache/spark/tree/master/resource-managers/kubernetes/integration-tests
   # https://github.com/apache/spark/blob/master/.github/workflows/build_and_test.yml
+  # https://github.com/apache/spark/pull/35830
   steps:
     - name: Load image ${{ inputs.image }} into Kind and setup Spark RBACs
       run: |
