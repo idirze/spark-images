@@ -36,12 +36,15 @@ inputs:
 
 runs:
   using: composite
+  # https://github.com/apache/spark/tree/master/resource-managers/kubernetes/integration-tests
+  # https://github.com/apache/spark/blob/master/.github/workflows/build_and_test.yml
   steps:
-    # https://github.com/apache/spark/tree/master/resource-managers/kubernetes/integration-tests
-    # https://github.com/apache/spark/blob/master/.github/workflows/build_and_test.yml
     - name: Load image ${{ inputs.image }} into Kind and setup Spark RBACs
       run: |
-          kubectl create clusterrolebinding serviceaccounts-cluster-admin --clusterrole=cluster-admin --group=system:serviceaccounts || true
+          kubectl create clusterrolebinding serviceaccounts-cluster-admin \
+              --clusterrole=cluster-admin \
+              --group=system:serviceaccounts || true
+          # Pull and Load the image into all kind nodes (current setup mono node) for fast executors startup
           docker pull ${{ inputs.ci-repo}}/${{ inputs.image }}:${{ inputs.image-tag }} 
           kind load docker-image ${{ inputs.ci-repo}}/${{ inputs.image }}:${{ inputs.image-tag }} --name kind-ci-${{ github.job }}
       shell: bash
