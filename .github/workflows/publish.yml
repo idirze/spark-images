@@ -80,7 +80,7 @@ jobs:
 
   spark-publish:
     if: github.repository_owner == 'idirze' && needs.latest-github-release.outputs.tag_name != ''
-    name: spark-publish (spark-${{ matrix.version.spark_version }})
+    name: spark-publish (${{ needs.latest-github-release.outputs.tag_name }}/spark-${{ matrix.version.spark_version }})
     needs: [latest-github-release, get-release-versions]
     strategy:
       matrix: 
