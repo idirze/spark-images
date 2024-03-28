@@ -40,10 +40,10 @@ inputs:
     description: The Git remote latest tag name
     required: false
   publish_repo:
-    description: The Publish registry repo
+    description: The official registry repo
     required: false
   publish_to_registry:
-    description: Whether to push or not to the Publish repo
+    description: Whether to push or not to the official registry repo
     required: true
 
 outputs:

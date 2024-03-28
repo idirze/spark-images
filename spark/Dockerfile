@@ -38,9 +38,13 @@ COPY okdp-addons.pom deps/pom.xml
 # The setup consumes less space compare to inheriting from the parent pom
 # Handles the transitive dependencies versions through the pom
 # Manage Java AWS SDK v1 (hadoop <3.4)/V2 (hadoop >=3.4)
+# Some pom.xml versions comes with Control M
+### https://stackoverflow.com/questions/19406418/remove-m-characters-from-file-using-sed
 RUN mvn dependency:get -DgroupId=org.apache.spark -DartifactId=spark-parent_${SCALA_VERSION} -Dversion=${SPARK_VERSION} -Dpackaging=pom; \
     mvn dependency:copy -Dartifact=org.apache.spark:spark-parent_${SCALA_VERSION}:${SPARK_VERSION}:pom -Dproject.basedir=./ -DoutputDirectory=./; \
-    HADOOP_VERSION=$(grep "<hadoop.version>" spark-parent_${SCALA_VERSION}-${SPARK_VERSION}.pom | sed -e 's/^ *<hadoop.version>\(.*\)<\/hadoop.version> *$/\1/'|head -1); \
+    alias dos2unix="sed -i -e 's/'\"\$(printf '\015')\"'//g' "; \
+    dos2unix spark-parent_${SCALA_VERSION}-${SPARK_VERSION}.pom; \
+    HADOOP_VERSION=$(grep "<hadoop.version>" spark-parent_${SCALA_VERSION}-${SPARK_VERSION}.pom | tr -d ' ' | tr -d '^M'| sed -e 's/^ *<hadoop.version>\(.*\)<\/hadoop.version> *$/\1/' | sort -rn | head -n 1); \
     mv ./deps/pom.xml .; \
     mvn clean dependency:copy-dependencies \
         -Dspark.version=${SPARK_VERSION} \

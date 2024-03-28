@@ -94,7 +94,7 @@ jobs:
       - name: Set up QEMU and Docker Buildx 📦
         uses: ./.github/actions/setup-buildx
 
-      - name: Set up CI and Publish registries 📦
+      - name: Set up CI and official registries 📦
         id: registry-repos
         run:  |
             echo "repo_owner=${GITHUB_REPOSITORY_OWNER@L}" >> $GITHUB_OUTPUT
@@ -179,7 +179,7 @@ jobs:
 
       ### Publish steps
       ### The publish and periodic rebuilds are based on the latest stable github release tag
-      - name: Login into publish registry 🔐
+      - name: Login into official registry 🔐
         if: inputs.publish_to_registry == 'true'
         uses: docker/login-action@v3
         with:
@@ -187,7 +187,7 @@ jobs:
           username: ${{ secrets.REGISTRY_USERNAME }}
           password: ${{ secrets.REGISTRY_ROBOT_TOKEN }}
 
-      - name: Build and push to publish registry 📤
+      - name: Build and push to official registry 📤
         if: inputs.publish_to_registry == 'true'
         uses: docker/build-push-action@v5
         with:
