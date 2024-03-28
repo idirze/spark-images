@@ -68,7 +68,7 @@ jobs:
           ci_only: "true"
 
   spark-ci:
-    name: spark-ci (spark-${{ matrix.spark_version }})
+    name: spark-ci (spark-${{ matrix.version.spark_version }})
     needs: [get-ci-versions-matrix]
     strategy:
       matrix: 
