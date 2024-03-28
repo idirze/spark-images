@@ -18,7 +18,7 @@ name: Build Spark versions matrix
 description: Build Spark versions matrix from '.build/versions.yml' and '.build/reference-versions.yml' files
 
 inputs:
-  test_only:
+  ci_only:
     description: Get Spark matrix version for tests
     required: false
     default: 'false'
@@ -36,9 +36,9 @@ runs:
       run: |
 
           BUILD_VERSION_FILE=".build/versions.yml"
-          if [[ "${{ inputs.test_only }}" == "true" ]]
+          if [[ "${{ inputs.ci_only }}" == "true" ]]
           then
-             BUILD_VERSION_FILE=".build/test-versions.yml"
+             BUILD_VERSION_FILE=".build/ci-versions.yml"
           fi
 
           INPUT_MATRIX=$(yq -oj ${BUILD_VERSION_FILE} | jq '.version | .[] | 

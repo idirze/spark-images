@@ -15,8 +15,8 @@
 #
 
 ########### CURRENT MATRIX VERSIONS ################################################################################
-#### PUT THE SPARK VERSIONS TO BUILD IN CORRESPONDANCE WITH 'reference_versions.yml' FILE ##########################
-#### !!! ANY DECLARED VERSION WHICH IS NOT PRESENT IN 'reference_versions.yml' FILE IS SKIPPED DURING BUILD !!! ####
+#### PUT THE SPARK VERSIONS TO BUILD IN CORRESPONDANCE WITH 'reference-versions.yml' FILE ##########################
+#### !!! ANY DECLARED VERSION WHICH IS NOT PRESENT IN 'reference-versions.yml' FILE IS SKIPPED DURING BUILD !!! ####
 #### REMOVE, UPDATE OR ADD VERSIONS ################################################################################
 version:
   # Maximum python version supported by spark-3.2.x: 3.9

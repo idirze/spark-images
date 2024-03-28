@@ -52,27 +52,27 @@ permissions:
   
 jobs:
 
-  get-test-versions-matrix:
+  get-ci-versions-matrix:
     if: github.repository_owner == 'idirze'
     runs-on: "ubuntu-latest"
     outputs:
-      matrix: ${{ steps.test-versions.outputs.matrix }}
+      matrix: ${{ steps.ci-versions.outputs.matrix }}
     steps:
       - name: Checkout Repo ⚡️
         uses: actions/checkout@v4
 
-      - name: Get test versions matrix 📥
-        id: test-versions
+      - name: Get CI versions matrix 📥
+        id: ci-versions
         uses: ./.github/actions/spark-version-matrix
         with:
-          test_only: "true"
+          ci_only: "true"
 
   spark-ci:
     name: spark-ci (spark-${{ matrix.spark_version }})
-    needs: [get-test-versions-matrix]
+    needs: [get-ci-versions-matrix]
     strategy:
       matrix: 
-        version: ${{ fromJson(needs.get-test-versions-matrix.outputs.matrix) }}
+        version: ${{ fromJson(needs.get-ci-versions-matrix.outputs.matrix) }}
     uses: ./.github/workflows/build-images-template.yml
     with:
       python_version: ${{ matrix.version.python_version }}
