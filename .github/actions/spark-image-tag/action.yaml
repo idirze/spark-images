@@ -108,6 +108,11 @@ runs:
         #### The tag is pushed in the CI registry only
         CI_GIT_BRANCH_SUFFIX="${{ steps.branch.outputs.current_branch }}"
         CI_GIT_BRANCH_SUFFIX=${CI_GIT_BRANCH_SUFFIX//\//-} 
+        
+        if [[ "${{ inputs.publish_to_registry }}" == "false" ]]
+        then
+           LATEST_TAG="${LATEST_TAG}-${CI_GIT_BRANCH_SUFFIX}"
+        fi
 
         # The image can inherit from a community image like docker.io/eclipse-temurin, ...
         if [[ "${PARENT_IMAGE_NAME}" != *"/"* ]]
@@ -117,7 +122,6 @@ runs:
               PARENT_IMAGE_NAME="${{ inputs.publish_repo }}/${PARENT_IMAGE_NAME}"
            else
               PARENT_IMAGE_NAME="${{ inputs.ci_repo }}/${PARENT_IMAGE_NAME}-${CI_GIT_BRANCH_SUFFIX}"
-              LATEST_TAG="${LATEST_TAG}-${CI_GIT_BRANCH_SUFFIX}"
            fi
         fi
 
