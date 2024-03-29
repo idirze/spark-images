@@ -106,7 +106,7 @@ runs:
 
         ### For pull request branchs merge, suffix the CI tag with the branch name
         #### The tag is pushed in the CI registry only
-        CI_GIT_BRANCH_SUFFIX="${{ steps.branch.outputs.current_branch }}"
+        CI_GIT_BRANCH_SUFFIX="${{ steps.git-branch.outputs.current_branch }}"
         CI_GIT_BRANCH_SUFFIX=${CI_GIT_BRANCH_SUFFIX//\//-} 
         
         if [[ "${{ inputs.publish_to_registry }}" == "false" ]]
