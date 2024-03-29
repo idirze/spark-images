@@ -36,15 +36,13 @@ runs:
 
           INPUT_MATRIX=$(yq -oj ${{ inputs.use_matrix }} | jq '.versions | .[] | 
                {python_version: .python_version, 
-               hadoop_version: .hadoop_version, 
-               spark_dist_download_url: .spark_dist_download_url} + 
+               hadoop_version: .hadoop_version} + 
                (.spark_version[] | {spark_version: .}) + 
                (.scala_version[] | {scala_version: .}) +
                (.java_version[] | {java_version: .})' | jq -c --slurp '.')
           REF_MATRIX=$(yq -oj .build/reference-versions.yml | jq '.versions | .[] | 
                {python_version: .python_version, 
-               hadoop_version: .hadoop_version, 
-               spark_dist_download_url: .spark_dist_download_url} + 
+               hadoop_version: .hadoop_version} + 
                (.spark_version[] | {spark_version: .}) + 
                (.scala_version[] | {scala_version: .}) +
                (.java_version[] | {java_version: .})' | jq -c --slurp '.')
