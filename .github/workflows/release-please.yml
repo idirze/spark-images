@@ -40,7 +40,33 @@ defaults:
 jobs:
   release-please:
     runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.release-please.outputs.release_created }}
+      tag_name: ${{ steps.release-please.outputs.tag_name }}
+    # Skip the release process in the fork
+    # The pull request should come from the same repo (github_token from the fork does not have write permissions)
     if: github.repository_owner == 'idirze' && github.event.pull_request.merged == true && github.event.pull_request.head.repo.full_name == github.repository
     steps:
       - uses: google-github-actions/release-please-action@v4
+        id: release-please
 
+  # The release should be created manually (or with user token=pr approval/merge) in order to trigger the event
+  # https://github.com/orgs/community/discussions/25281
+  publish:
+    runs-on: ubuntu-latest
+    needs: [release-please]
+    if: needs.release-please.outputs.release_created == 'true'
+    permissions:
+      contents: write
+      actions: write
+      packages: write
+    steps:
+      - name: "Publish images to official registry"
+        env:
+          GH_REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
+          GH_DEBUG: api
+        run: |
+          gh workflow run publish.yml
+        shell: bash
+      
