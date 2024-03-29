@@ -15,12 +15,9 @@
 # limitations under the License.
 #
 
-# Some signing gpg keys are missing from https://downloads.apache.org/spark/KEYS
-## We add them thanks to apache/spark-docker official images repo:
+# Some gpg keys are missing in the spark project release key https://downloads.apache.org/spark/KEYS
+## We add them manually thanks to apache/spark-docker official images repo:
 #### https://github.com/apache/spark-docker/blob/master/tools/template.py
 keys:
   # issuer "yumwang@apache.org"
   - "3.3.1": "86727D43E73A415F67A0B1A14E68B3E6CD473653"
-
-
-
