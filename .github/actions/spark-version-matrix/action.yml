@@ -18,10 +18,9 @@ name: Build Spark versions matrix
 description: Build Spark versions matrix from '.build/versions.yml' and '.build/reference-versions.yml' files
 
 inputs:
-  ci_only:
-    description: Get Spark matrix version for tests
-    required: false
-    default: 'false'
+  use_matrix:
+    description: The matrix version file to use
+    required: true
 
 outputs:
   matrix:
@@ -35,13 +34,7 @@ runs:
       id: generate-matrix
       run: |
 
-          BUILD_VERSION_FILE=".build/release-versions.yml"
-          if [[ "${{ inputs.ci_only }}" == "true" ]]
-          then
-             BUILD_VERSION_FILE=".build/ci-versions.yml"
-          fi
-
-          INPUT_MATRIX=$(yq -oj ${BUILD_VERSION_FILE} | jq '.versions | .[] | 
+          INPUT_MATRIX=$(yq -oj ${{ inputs.use_matrix }} | jq '.versions | .[] | 
                {python_version: .python_version, 
                hadoop_version: .hadoop_version, 
                spark_dist_download_url: .spark_dist_download_url} + 

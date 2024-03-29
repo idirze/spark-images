@@ -77,6 +77,8 @@ jobs:
       - name: Get release versions matrix 📥
         id: release-versions
         uses: ./.github/actions/spark-version-matrix
+        with:
+          use_matrix: ".build/release-versions.yml"
 
   spark-publish:
     if: github.repository_owner == 'idirze' && needs.latest-github-release.outputs.tag_name != ''
