@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.1.0](https://github.com/idirze/spark-images/compare/v1.0.0...v1.1.0) (2024-04-02)
+
+
+### Features
+
+* **chung:** new feature for test ([08999b0](https://github.com/idirze/spark-images/commit/08999b009eea268788b1ce9d1e4581f405b3b8b2))
+* **ci:** update ci workflow ([aff9924](https://github.com/idirze/spark-images/commit/aff9924639ee50025dd1f4c358dca73a333721b2))
+
+
+### Bug Fixes
+
+* **demo:** add some fix1 ([a78135b](https://github.com/idirze/spark-images/commit/a78135b417b35e96b3ef30e648b78161f48b8d2f))
+* **demo:** add some fix2 ([b885afd](https://github.com/idirze/spark-images/commit/b885afd9b4531f2a1d8051b3fb7d8a9e8a1c0ed7))
+* **demo:** add some fixe ([7925262](https://github.com/idirze/spark-images/commit/7925262b7fcfded2246b839df45789600d1206e1))
+
 ## 1.0.0 (2024-03-29)
 
 
