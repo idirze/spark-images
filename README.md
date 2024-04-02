@@ -42,7 +42,7 @@ The images are pushed to [OKDP quay.io](https://quay.io/organization/okdp) repos
 > `git_release_version` corresponds to the Github [release version](https://github.com/idirze/spark-images/releases) or [git tag](https://github.com/idirze/spark-images/tags) without the leading `v`.
 >  Ex.: 1.0.0
 > 
-> An example of a `py-spark` image with a long form tag including spark/java/scala/python compatible versions and a push date with a release version is: quay.io/okdp/spark-py:spark-3.3.4-python-3.10-scala-2.12-java-17-2024-03-29-1.0.0
+> An example of a `py-spark` image with a long form tag including `spark/java/scala/python` compatible versions and a `push date` with a `release version` is: `quay.io/okdp/spark-py:spark-3.3.4-python-3.10-scala-2.12-java-17-2024-03-29-1.0.0`.
 >
 
 # Alternatives
