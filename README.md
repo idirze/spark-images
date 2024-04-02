@@ -3,6 +3,8 @@
 [![License Apache2](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0)
 
 
+<p align="center">
+ <img src="docs/images/spark-images.drawio.svg">
+</p>
 
-![spark images](docs/images/spark-images.drawio.svg)
 
