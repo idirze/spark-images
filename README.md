@@ -39,7 +39,7 @@ The images are pushed to [OKDP quay.io](https://quay.io/organization/okdp) repos
 | `spark-r`           | spark-${spark_version}-r-${r_version}-scala-${scala_version}-java-${java_version}</br> spark-${spark_version}-r-${r_version}-scala-${scala_version}-java-${java_version}-$(date '+%Y-%m-%d')</br>spark-${spark_version}-r-${r_version}-scala-${scala_version}-java-${java_version}-${git_release_version}</br>spark-${spark_version}-r-${r_version}-scala-${scala_version}-java-${java_version}-$(date '+%Y-%m-%d')-${git_release_version}                                        |
 
 > [!NOTE]
-> `git_release_version` corresponds the Github release version or git tag without the leading `v'.
+> `git_release_version` corresponds the Github [release version](https://github.com/idirze/spark-images/releases) or [git tag](https://github.com/idirze/spark-images/tags) without the leading `v`.
 >  Ex.: 1.0.0
 >
 
