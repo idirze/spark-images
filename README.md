@@ -39,10 +39,10 @@ The images are pushed to [OKDP quay.io](https://quay.io/organization/okdp) repos
 | spark-r           | spark-<SPARK_VERSION>-r-<R_VERSION>-scala-<SCALA_VERSION>-java-<JAVA_VERSION></br> spark-<SPARK_VERSION>-r-<R_VERSION>-scala-<SCALA_VERSION>-java-<JAVA_VERSION>-<BUILD_DATE></br>spark-<SPARK_VERSION>-r-<R_VERSION>-scala-<SCALA_VERSION>-java-<JAVA_VERSION>-<RELEASE_VERSION></br>spark-<SPARK_VERSION>-r-<R_VERSION>-scala-<SCALA_VERSION>-java-<JAVA_VERSION>-<BUILD_DATE>-<RELEASE_VERSION>                                        |
 
 > [!NOTE]
-> `<RELEASE_VERSION>` corresponds to the Github [release version](https://github.com/idirze/spark-images/releases) or [git tag](https://github.com/idirze/spark-images/tags) without the leading `v`.
+> 1. `<RELEASE_VERSION>` corresponds to the Github [release version](https://github.com/idirze/spark-images/releases) or [git tag](https://github.com/idirze/spark-images/tags) without the leading `v`.
 >  Ex.: 1.0.0
 > 
-> `BUILD_DATE` corresponds to the images build date with the `YYYY-MM-DD` format. The latest release tag is built every week.
+> 2. `BUILD_DATE` corresponds to the images build date with the `YYYY-MM-DD` format. The latest release tag is built every week.
 > 
 > An example of a `py-spark` image with a long form tag including `spark/java/scala/python` compatible versions and a `push date` with a `release version` is: 
 > 
