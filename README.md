@@ -46,7 +46,7 @@ The images are pushed to [OKDP quay.io](https://quay.io/organization/okdp) repos
 > 
 > An example of a `py-spark` image with a long form tag including `spark/java/scala/python` compatible versions and a `build date` with a `release version` is: 
 > 
-> `quay.io/okdp/spark-py:spark-3.3.4-python-3.10-scala-2.12-java-17-2024-03-29-1.0.0`.
+> `quay.io/okdp/spark-py:spark-3.3.4-python-3.10-scala-2.12-java-17-2024-04-04-1.0.0`.
 >
 
 # Alternatives
