@@ -78,7 +78,7 @@ runs:
       run: |
         set -euo pipefail
 
-        repo_owner="$(printf "%s" "${GITHUB_REPOSITORY_OWNER}" | tr "[:upper:]" "[:lower:]")"
+        repo_owner="okdp"
         publish_repo="${REGISTRY}/${repo_owner}"
         git_release_version="${GIT_TAG_NAME#v}"
 
