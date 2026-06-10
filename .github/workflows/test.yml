@@ -87,7 +87,7 @@ jobs:
 
   spark-base:
     if: github.repository_owner == 'idirze' && needs.generate-trivy-matrix.outputs.spark_base_matrix != '{"include":[]}'
-    name: scan-(${{ needs.latest-github-release.outputs.tag_name }}/spark-${{ matrix.spark_version }})
+    name: spark-base (${{ needs.latest-github-release.outputs.tag_name }}/${{ matrix.spark_version }})
     needs: [latest-github-release, generate-trivy-matrix]
     runs-on: "ubuntu-latest"
     strategy:
@@ -106,11 +106,11 @@ jobs:
         uses: github/codeql-action/upload-sarif@1a818fd5f97ed0ee9a823421bd5b171add01227f # v4.36.2
         with:
           sarif_file: trivy-results-${{ matrix.image_tag }}.sarif
-          category: trivy-spark-images-${{ matrix.image_tag }}
+          category: trivy-spark-base-${{ matrix.image_tag }}
 
   spark:
     if: github.repository_owner == 'idirze' && needs.generate-trivy-matrix.outputs.spark_matrix != '{"include":[]}'
-    name: scan-(${{ needs.latest-github-release.outputs.tag_name }}/spark-${{ matrix.spark_version }})
+    name: spark (${{ needs.latest-github-release.outputs.tag_name }}/${{ matrix.spark_version }})
     needs: [latest-github-release, generate-trivy-matrix]
     runs-on: "ubuntu-latest"
     strategy:
@@ -129,11 +129,11 @@ jobs:
         uses: github/codeql-action/upload-sarif@1a818fd5f97ed0ee9a823421bd5b171add01227f # v4.36.2
         with:
           sarif_file: trivy-results-${{ matrix.image_tag }}.sarif
-          category: trivy-spark-images-${{ matrix.image_tag }}
+          category: trivy-spark-${{ matrix.image_tag }}
 
   spark-py:
     if: github.repository_owner == 'idirze' && needs.generate-trivy-matrix.outputs.spark_py_matrix != '{"include":[]}'
-    name: scan-(${{ needs.latest-github-release.outputs.tag_name }}/spark-${{ matrix.spark_version }})
+    name: spark-py (${{ needs.latest-github-release.outputs.tag_name }}/${{ matrix.spark_version }})
     needs: [latest-github-release, generate-trivy-matrix]
     runs-on: "ubuntu-latest"
     strategy:
@@ -152,11 +152,11 @@ jobs:
         uses: github/codeql-action/upload-sarif@1a818fd5f97ed0ee9a823421bd5b171add01227f # v4.36.2
         with:
           sarif_file: trivy-results-${{ matrix.image_tag }}.sarif
-          category: trivy-spark-images-${{ matrix.image_tag }}
+          category: trivy-spark-py-${{ matrix.image_tag }}
 
   spark-r:
     if: github.repository_owner == 'idirze' && needs.generate-trivy-matrix.outputs.spark_r_matrix != '{"include":[]}'
-    name: scan-(${{ needs.latest-github-release.outputs.tag_name }}/spark-${{ matrix.spark_version }})
+    name: spark-r (${{ needs.latest-github-release.outputs.tag_name }}/${{ matrix.spark_version }})
     needs: [latest-github-release, generate-trivy-matrix]
     runs-on: "ubuntu-latest"
     strategy:
@@ -175,4 +175,4 @@ jobs:
         uses: github/codeql-action/upload-sarif@1a818fd5f97ed0ee9a823421bd5b171add01227f # v4.36.2
         with:
           sarif_file: trivy-results-${{ matrix.image_tag }}.sarif
-          category: trivy-spark-images-${{ matrix.image_tag }}
+          category: trivy-spark-r-${{ matrix.image_tag }}
