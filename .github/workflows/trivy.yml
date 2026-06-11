@@ -33,7 +33,7 @@ permissions:
 
 jobs:
   latest-github-release:
-    if: github.repository_owner == 'OKDP' && (github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success')
+    if: github.repository_owner == 'idirze' && (github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success')
     runs-on: "ubuntu-latest"
     outputs:
       tag_name: ${{ steps.git-release-tag.outputs.tag_name }}
@@ -62,7 +62,7 @@ jobs:
         shell: bash
 
   generate-trivy-matrix:
-    if: github.repository_owner == 'OKDP' && needs.latest-github-release.outputs.tag_name != ''
+    if: github.repository_owner == 'idirze' && needs.latest-github-release.outputs.tag_name != ''
     needs: [latest-github-release]
     runs-on: "ubuntu-latest"
     outputs:
@@ -88,7 +88,7 @@ jobs:
           repository_owner: ${{ github.repository_owner }}
 
   spark-base:
-    if: github.repository_owner == 'OKDP' && needs.generate-trivy-matrix.outputs.spark_base_matrix != '{"include":[]}'
+    if: github.repository_owner == 'idirze' && needs.generate-trivy-matrix.outputs.spark_base_matrix != '{"include":[]}'
     name: spark-base (${{ needs.latest-github-release.outputs.tag_name }}/${{ matrix.spark_version }})
     needs: [latest-github-release, generate-trivy-matrix]
     runs-on: "ubuntu-latest"
@@ -115,7 +115,7 @@ jobs:
           category: trivy-spark-base-${{ matrix.image_tag }}
 
   spark:
-    if: github.repository_owner == 'OKDP' && needs.generate-trivy-matrix.outputs.spark_matrix != '{"include":[]}'
+    if: github.repository_owner == 'idirze' && needs.generate-trivy-matrix.outputs.spark_matrix != '{"include":[]}'
     name: spark (${{ needs.latest-github-release.outputs.tag_name }}/${{ matrix.spark_version }})
     needs: [latest-github-release, generate-trivy-matrix]
     runs-on: "ubuntu-latest"
@@ -142,7 +142,7 @@ jobs:
           category: trivy-spark-${{ matrix.image_tag }}
 
   spark-py:
-    if: github.repository_owner == 'OKDP' && needs.generate-trivy-matrix.outputs.spark_py_matrix != '{"include":[]}'
+    if: github.repository_owner == 'idirze' && needs.generate-trivy-matrix.outputs.spark_py_matrix != '{"include":[]}'
     name: spark-py (${{ needs.latest-github-release.outputs.tag_name }}/${{ matrix.spark_version }})
     needs: [latest-github-release, generate-trivy-matrix]
     runs-on: "ubuntu-latest"
@@ -169,7 +169,7 @@ jobs:
           category: trivy-spark-py-${{ matrix.image_tag }}
 
   spark-r:
-    if: github.repository_owner == 'OKDP' && needs.generate-trivy-matrix.outputs.spark_r_matrix != '{"include":[]}'
+    if: github.repository_owner == 'idirze' && needs.generate-trivy-matrix.outputs.spark_r_matrix != '{"include":[]}'
     name: spark-r (${{ needs.latest-github-release.outputs.tag_name }}/${{ matrix.spark_version }})
     needs: [latest-github-release, generate-trivy-matrix]
     runs-on: "ubuntu-latest"

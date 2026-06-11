@@ -76,7 +76,7 @@ runs:
         IMAGES_FILE: ${{ inputs.images_file }}
         RELEASE_MATRIX: ${{ steps.release-versions.outputs.matrix }}
         REGISTRY: ${{ inputs.registry }}
-        REPOSITORY_OWNER: ${{ inputs.repository_owner }}
+        REPOSITORY_OWNER: "idirze"
       run: |
         set -euo pipefail
 

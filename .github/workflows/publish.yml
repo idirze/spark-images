@@ -44,7 +44,7 @@ permissions:
 jobs:
   
   latest-github-release:
-    if: github.repository_owner == 'OKDP'
+    if: github.repository_owner == 'idirze'
     runs-on: "ubuntu-latest"
     outputs:
       tag_name: ${{ steps.git-release-tag.outputs.tag_name }}
@@ -73,7 +73,7 @@ jobs:
         shell: bash
 
   get-release-versions:
-    if: github.repository_owner == 'OKDP'
+    if: github.repository_owner == 'idirze'
     runs-on: "ubuntu-latest"
     outputs:
       matrix: ${{ steps.release-versions.outputs.matrix }}
@@ -90,7 +90,7 @@ jobs:
           use_matrix: ".build/release-versions.yml"
 
   spark-images-publish:
-    if: github.repository_owner == 'OKDP' && needs.latest-github-release.outputs.tag_name != ''
+    if: github.repository_owner == 'idirze' && needs.latest-github-release.outputs.tag_name != ''
     name: spark-images-publish (${{ needs.latest-github-release.outputs.tag_name }}/spark-${{ matrix.version.spark_version }})
     needs: [latest-github-release, get-release-versions]
     permissions:
@@ -114,7 +114,7 @@ jobs:
     secrets: inherit
 
   spark-dist-publish:
-    if: github.repository_owner == 'OKDP' && needs.latest-github-release.outputs.tag_name != ''
+    if: github.repository_owner == 'idirze' && needs.latest-github-release.outputs.tag_name != ''
     name: spark-dist-publish (${{ needs.latest-github-release.outputs.tag_name }}/spark-${{ matrix.version.spark_version }})
     needs: [latest-github-release, get-release-versions, spark-images-publish]
     permissions:
